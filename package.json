@@ -4,7 +4,10 @@
   "description": "Application Web de gestion d'agendas (projet ACL 2026, équipe BugCM)",
   "main": "server/server.js",
   "scripts": {
-    "start": "node server/server.js"
+    "prestart": "docker compose up -d --wait",
+    "start": "node server/server.js",
+    "db:stop": "docker compose stop",
+    "db:reset": "docker compose down -v && docker compose up -d --wait"
   },
   "engines": {
     "node": ">=20"
@@ -12,6 +15,8 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
-    "express": "^5.2.1"
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "pg": "^8.23.1"
   }
 }
