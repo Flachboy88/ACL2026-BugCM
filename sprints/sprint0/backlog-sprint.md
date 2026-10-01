@@ -36,7 +36,7 @@
 | Story | Prio | Sprint |
 |---|---|---|
 | En tant qu'utilisateur, je veux ajouter un rendez-vous (titre, date/heure de début et de fin, agenda, lieu et description facultatifs), afin de planifier mon temps. | M | 0 |
-| En tant qu'utilisateur, je veux supprimer un rendez-vous (avec confirmation), afin de retirer un événement annulé. | M | 0 |
+| En tant qu'utilisateur, je veux supprimer un rendez-vous (avec confirmation), afin de retirer un événement annulé en faisant clic droit. | M | 0 |
 
 
 ### Épic 4 — Visualisation
