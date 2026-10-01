@@ -19,23 +19,20 @@ Nom de l'équipe : **BugCM**
 
 ## Lancement
 
-Prérequis :
-
-- [Node.js](https://nodejs.org/) **20 ou plus** (avec npm) ;
-- [Docker](https://www.docker.com/) avec Docker Compose, **lancé** (sous Windows : Docker Desktop doit être ouvert).
+Prérequis : [Node.js](https://nodejs.org/) **22 ou plus**, en version LTS (avec npm). Rien d'autre à installer.
 
 ```bash
 npm install && npm start
 ```
 
-`npm start` démarre la base de données (conteneur Docker), met à jour ses tables, puis lance le serveur sur le port **3000** :
+`npm start` crée ou met à jour la base de données (un fichier SQLite), puis lance le serveur sur le port **3000** :
 
 - en local : http://localhost:3000
 - depuis une autre machine du réseau local : `http://<IP-de-la-machine-hôte>:3000`
 
 Plusieurs clients peuvent utiliser l'application simultanément.
 
-Installation de Docker, commandes utiles et dépannage : voir [docs/base-de-donnees.md](docs/base-de-donnees.md).
+Base de données, création des tables et dépannage : voir [docs/base-de-donnees.md](docs/base-de-donnees.md).
 
 ---
 
@@ -53,14 +50,14 @@ Un **serveur unique** (Express) assure deux rôles, sur des routes distinctes :
 ├── client/                 # Client Web : pages HTML, styles CSS, scripts JS
 ├── server/
 │   ├── server.js           # Point d'entrée : routes API + pages Web
-│   ├── database.js         # Connexion à PostgreSQL
-│   └── migrations.js       # Application des migrations au démarrage
+│   ├── database.js         # Connexion à la base SQLite
+│   ├── migrations.js       # Application des migrations au démarrage
+│   └── resetDatabase.js    # Effacement de la base locale (npm run db:reset)
 ├── database/
 │   └── migrations/         # Fichiers SQL numérotés qui créent / modifient les tables
+├── data/                   # Fichier de la base (agenda.db), créé au démarrage, pas dans Git
 ├── docs/                   # Documentation de l'équipe
 ├── sprints/                # Documents Scrum, un dossier par sprint
-├── docker-compose.yml      # Conteneur PostgreSQL
-├── .env.example            # Valeurs de connexion à la base (à copier en .env si besoin)
 └── package.json
 ```
 
@@ -71,11 +68,11 @@ Un **serveur unique** (Express) assure deux rôles, sur des routes distinctes :
 | Serveur | Node.js + Express 5 |
 | Client | HTML, CSS et JavaScript, sans framework |
 | Affichage du calendrier | FullCalendar (en cours d'intégration) |
-| Base de données | PostgreSQL 17 dans un conteneur Docker |
+| Base de données | SQLite (bibliothèque `better-sqlite3`) |
 
 ### Persistance des données
 
-Les données sont stockées dans PostgreSQL, dans un volume Docker : un redémarrage du serveur, du conteneur ou de la machine n'entraîne aucune perte d'information.
+Les données sont stockées dans une base SQLite, c'est-à-dire un fichier : `data/agenda.db`. Un redémarrage du serveur ou de la machine n'entraîne aucune perte d'information.
 
 Les tables sont créées et modifiées par des **migrations** (fichiers SQL numérotés dans `database/migrations/`), appliquées automatiquement au démarrage du serveur. Fonctionnement détaillé : [docs/base-de-donnees.md](docs/base-de-donnees.md).
 

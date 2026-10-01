@@ -1,76 +1,73 @@
 # Base de données : guide de l'équipe
 
-La base est un **PostgreSQL 17** qui tourne dans un conteneur **Docker**.
+La base est une base **SQLite** : toute la base tient dans **un seul fichier**, `data/agenda.db`.
+Il n'y a rien à installer : la bibliothèque `better-sqlite3` est installée par `npm install`.
+
 Les tables sont créées et modifiées par des **migrations** : des fichiers SQL numérotés, versionnés dans Git.
 
 ---
 
-## 1. Installer Docker (une seule fois)
-
-| Système | Quoi installer |
-|---|---|
-| Windows | [Docker Desktop](https://www.docker.com/products/docker-desktop/). Il demande **WSL2** : accepter l'installation. Si Docker refuse de démarrer, vérifier que la **virtualisation** est activée dans le BIOS. |
-| Linux | Docker Engine + le plugin Compose (`docker compose`, pas l'ancien `docker-compose`). Ajouter son utilisateur au groupe `docker` pour ne pas avoir besoin de `sudo` : `sudo usermod -aG docker $USER` puis se reconnecter. |
-
-Vérifier que tout marche :
-
-```bash
-docker run hello-world
-docker compose version
-```
-
-> Sous Windows, **Docker Desktop doit être lancé** avant `npm start`.
-
----
-
-## 2. Lancer le projet
+## 1. Lancer le projet
 
 ```bash
 npm install
 npm start
 ```
 
-`npm start` fait trois choses, dans l'ordre :
+Au démarrage, le serveur :
 
-1. `docker compose up -d --wait` : démarre le conteneur PostgreSQL et attend qu'il soit prêt. La première fois, Docker télécharge l'image PostgreSQL (quelques centaines de Mo, compter quelques minutes).
-2. Le serveur Node applique les **migrations** pas encore appliquées (voir partie 4).
-3. Le serveur écoute sur http://localhost:3000.
+1. crée le fichier `data/agenda.db` s'il n'existe pas encore ;
+2. applique les **migrations** pas encore appliquées (voir partie 3) ;
+3. écoute sur http://localhost:3000.
 
-Les données sont gardées dans un **volume Docker** (`agenda-bugcm_agenda-data`) : arrêter le serveur, le conteneur ou l'ordinateur ne les efface pas.
+Le fichier `data/agenda.db` **n'est pas dans Git** : chacun a sa propre base sur sa machine, avec ses propres données de test.
+Arrêter le serveur ou l'ordinateur ne l'efface pas.
 
 ### Commandes utiles
 
 | Commande | Effet |
 |---|---|
-| `npm start` | Démarre la base (si besoin) puis le serveur |
-| `npm run db:stop` | Arrête le conteneur de la base (les données sont gardées) |
-| `npm run db:reset` | **Efface toute la base** et la recrée vide (voir partie 5) |
-| `docker compose ps` | Montre si le conteneur tourne et s'il est `healthy` |
-| `docker compose logs db` | Affiche les messages de PostgreSQL |
-| `docker compose exec db psql -U agenda -d agenda` | Ouvre une console SQL dans la base (`\dt` liste les tables, `\q` pour quitter) |
+| `npm start` | Crée / met à jour la base, puis démarre le serveur |
+| `npm run db:reset` | **Efface toute la base** (le serveur doit être arrêté). Le prochain `npm start` la recrée (voir partie 5) |
 
-### Voir la base avec un outil graphique
+### Voir le contenu de la base
 
-DBeaver, pgAdmin, ou l'extension de base de données de VS Code / IntelliJ, avec :
+Ouvrir le fichier `data/agenda.db` avec un de ces outils :
 
-| Champ | Valeur |
-|---|---|
-| Hôte | `localhost` |
-| Port | `5432` |
-| Base | `agenda` |
-| Utilisateur | `agenda` |
-| Mot de passe | `agenda` |
+- **DB Browser for SQLite** (gratuit, le plus simple) : https://sqlitebrowser.org/
+- **DBeaver** : nouvelle connexion → SQLite → choisir le fichier ;
+- une extension SQLite pour VS Code ou IntelliJ.
 
-### Changer ces valeurs
+> Ces outils servent à **regarder** la base. Pour changer la structure des tables, on écrit une migration (partie 4), jamais à la main.
 
-Seulement si besoin (par exemple si le port 5432 est déjà pris par un PostgreSQL installé sur ta machine) :
-copier `.env.example` en `.env` et modifier les valeurs. Le fichier `.env` n'est pas versionné : il reste sur ta machine.
+---
+
+## 2. Utiliser la base dans le code du serveur
+
+La connexion est ouverte une seule fois dans `server/database.js`. Pour l'utiliser :
+
+```js
+const database = require("./database");
+
+// Lire plusieurs lignes
+const agendas = database.prepare("SELECT * FROM agenda WHERE utilisateur_id = ?").all(userId);
+
+// Lire une seule ligne (undefined si rien n'est trouvé)
+const agenda = database.prepare("SELECT * FROM agenda WHERE id = ?").get(agendaId);
+
+// Ajouter / modifier / supprimer
+const result = database.prepare("INSERT INTO agenda (nom, couleur) VALUES (?, ?)").run(name, color);
+console.log(result.lastInsertRowid); // id de la ligne créée
+```
+
+- Toujours passer les valeurs avec des `?`, jamais en collant du texte dans la requête (`"... WHERE id = " + id`) : c'est la protection contre les injections SQL.
+- Les fonctions sont **synchrones** : pas besoin de `await`.
 
 ---
 
 ## 3. Le principe des migrations
 
-On ne crée **jamais** une table à la main dans la base. On écrit un fichier SQL dans `database/migrations/`, et c'est le serveur qui l'applique au démarrage.
+On ne crée **jamais** une table à la main. On écrit un fichier SQL dans `database/migrations/`, et c'est le serveur qui l'applique au démarrage.
 
 ```
 database/migrations/
@@ -85,9 +82,9 @@ Au démarrage, le serveur :
 2. applique les autres, **dans l'ordre des numéros** ;
 3. note chaque fichier appliqué dans la table `migration`.
 
-Chaque fichier est appliqué dans une **transaction** : s'il y a une erreur dans le fichier, rien n'est appliqué, et le serveur s'arrête en affichant l'erreur.
+Chaque fichier est appliqué dans une **transaction** : s'il y a une erreur dans le fichier, **rien** n'est appliqué et le serveur s'arrête en affichant l'erreur.
 
-Résultat : quand quelqu'un ajoute une migration, les autres font `git pull` puis `npm start`, et leur base est à jour **sans perdre leurs données et sans toucher à Docker**.
+Résultat : quand quelqu'un ajoute une migration, les autres font `git pull` puis `npm start`, et leur base est à jour **sans perdre leurs données**.
 
 ---
 
@@ -101,23 +98,68 @@ Résultat : quand quelqu'un ajoute une migration, les autres font `git pull` pui
 
    ```sql
    CREATE TABLE exemple (
-       id SERIAL PRIMARY KEY,
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
        nom TEXT NOT NULL,
-       date_creation TIMESTAMP NOT NULL DEFAULT NOW()
+       date_creation TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
    );
    ```
 
 4. Lancer `npm start` : le terminal affiche `Migration applied: NNN_description_courte.sql`.
-5. Vérifier le résultat (DBeaver, ou `\d exemple` dans `psql`).
+5. Vérifier le résultat avec DB Browser for SQLite.
 6. Commit + PR, comme le reste du code.
+
+### Ce qui change par rapport au SQL vu en cours
+
+| Besoin | En SQLite |
+|---|---|
+| Identifiant auto-incrémenté | `id INTEGER PRIMARY KEY AUTOINCREMENT` |
+| Texte | `TEXT` (pas besoin de `VARCHAR(50)`) |
+| Nombre entier / booléen | `INTEGER` (booléen : `0` ou `1`) |
+| Date et heure | `TEXT` au format ISO : `'2026-10-15T14:30:00Z'`. Ce format se trie et se compare correctement (`WHERE debut >= '2026-10-12'`) |
+| Date actuelle par défaut | `DEFAULT CURRENT_TIMESTAMP` |
+| Clé étrangère | `agenda_id INTEGER NOT NULL REFERENCES agenda(id) ON DELETE CASCADE` |
+| Vérification | `CHECK (fin > debut)` |
+
+> Les clés étrangères sont **activées** par `server/database.js` : une ligne qui pointe vers une ligne inexistante est refusée.
 
 ### Modifier une table qui existe déjà
 
-On écrit une **nouvelle** migration, avec `ALTER TABLE` :
+On écrit une **nouvelle** migration. SQLite sait faire directement :
 
 ```sql
+-- Ajouter une colonne
 ALTER TABLE exemple ADD COLUMN description TEXT;
+
+-- Renommer une colonne
+ALTER TABLE exemple RENAME COLUMN nom TO titre;
+
+-- Supprimer une colonne
+ALTER TABLE exemple DROP COLUMN description;
 ```
+
+En revanche, SQLite **ne sait pas** changer le type ou les contraintes d'une colonne (ajouter un `NOT NULL`, un `UNIQUE`...).
+Dans ce cas, la migration **reconstruit** la table en 4 étapes :
+
+```sql
+-- 1. Créer la nouvelle version de la table
+CREATE TABLE exemple_nouveau (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nom TEXT NOT NULL UNIQUE,
+    date_creation TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Copier les données
+INSERT INTO exemple_nouveau (id, nom, date_creation)
+SELECT id, nom, date_creation FROM exemple;
+
+-- 3. Supprimer l'ancienne table
+DROP TABLE exemple;
+
+-- 4. Donner l'ancien nom à la nouvelle table
+ALTER TABLE exemple_nouveau RENAME TO exemple;
+```
+
+Les lignes des autres tables qui pointent vers `exemple` (clés étrangères) ne sont pas perdues : le serveur désactive les clés étrangères pendant les migrations, puis vérifie à la fin de chaque migration que tout est cohérent.
 
 ### Les règles
 
@@ -130,7 +172,9 @@ ALTER TABLE exemple ADD COLUMN description TEXT;
 
 ## 5. Quand faut-il effacer la base (`npm run db:reset`) ?
 
-`db:reset` supprime **toutes les données de ta base locale** (comptes de test, rendez-vous...), puis la recrée vide. Au `npm start` suivant, toutes les migrations sont réappliquées depuis le début.
+`db:reset` supprime le fichier `data/agenda.db`, donc **toutes les données de ta base locale** (comptes de test, rendez-vous...). Au `npm start` suivant, la base est recréée et toutes les migrations sont réappliquées depuis le début.
+
+Il faut **arrêter le serveur** avant (Ctrl+C dans le terminal où il tourne).
 
 | Situation | Faut-il reset ? |
 |---|---|
@@ -141,16 +185,16 @@ ALTER TABLE exemple ADD COLUMN description TEXT;
 | Ma base est dans un état bizarre et je veux repartir propre | **Oui** |
 | J'ai modifié une migration **déjà fusionnée** | Ne pas faire ça (voir les règles) |
 
-> On n'a **jamais besoin de redémarrer Docker** pour un changement de tables : ce sont les migrations qui font le travail.
-
 ---
 
 ## 6. Dépannage
 
 | Message | Cause probable | Solution |
 |---|---|---|
-| `failed to connect to the docker API` / `Cannot connect to the Docker daemon` | Docker n'est pas lancé | Lancer Docker Desktop (Windows) ou `sudo systemctl start docker` (Linux) |
-| `port is already allocated` / `address already in use` sur 5432 | Un autre PostgreSQL utilise déjà le port | Dans `.env`, mettre `DB_PORT=5433` (par exemple) |
 | `Could not prepare the database: Migration ... failed: ...` | Erreur SQL dans une migration | Lire le message, corriger le fichier, relancer `npm start` |
-| `password authentication failed` | Les valeurs du `.env` ont changé après la création de la base | `npm run db:reset` (la base est recréée avec les nouvelles valeurs) |
-| `permission denied ... docker.sock` (Linux) | Utilisateur pas dans le groupe `docker` | `sudo usermod -aG docker $USER` puis se reconnecter |
+| `... failed: some rows point to rows that do not exist (foreign keys)` | La migration laisse des lignes qui pointent vers des lignes supprimées ou inexistantes | Corriger les données copiées dans la migration |
+| `Could not delete the database. Is the server still running?` | Le serveur tourne encore et utilise le fichier | Arrêter le serveur (Ctrl+C), puis relancer `npm run db:reset` |
+| `FOREIGN KEY constraint failed` (pendant l'utilisation) | Le code insère une ligne qui pointe vers une ligne inexistante | Vérifier l'identifiant envoyé (agenda, utilisateur...) |
+| `npm install` échoue sur `better-sqlite3` avec `gyp ERR!` ou `Visual Studio` | Pas de version précompilée de `better-sqlite3` pour ta version de Node, donc npm essaie de la compiler | Installer la version **LTS** de Node (22 ou 24) depuis https://nodejs.org/, supprimer `node_modules`, relancer `npm install` |
+
+> Ne pas passer `better-sqlite3` en version 13 : cette version n'est plus fournie précompilée et demande des outils de compilation (Visual Studio sous Windows). La version 12 suffit.
