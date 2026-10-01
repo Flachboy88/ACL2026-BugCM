@@ -4,3 +4,6 @@ node_modules/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local database (each developer has their own)
+data/
