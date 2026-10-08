@@ -1,14 +1,6 @@
-// Asks the API if the server is running and shows the answer on the page
-async function showServerStatus() {
-    const statusElement = document.getElementById("server-status");
+import { createCalendar } from './calendar.js';
 
-    try {
-        const response = await fetch("/api/status");
-        const data = await response.json();
-        statusElement.textContent = data.status;
-    } catch (error) {
-        statusElement.textContent = "injoignable";
-    }
-}
-
-showServerStatus();
+document.addEventListener('DOMContentLoaded', () => {
+  const calendar = createCalendar('calendar');
+  calendar.render();
+});
