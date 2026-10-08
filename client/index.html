@@ -22,6 +22,50 @@
 </style>
 </head>
 <body>
-  <div id="calendar"></div>
+    <div id="header">
+        <h1>Agenda BugCM</h1>
+        <p>Statut du serveur : <span id="server-status">...</span></p>
+    </div>
+
+    <div id="auth_container">
+        <div id="login" class="auth">
+            <form method="post" action="">
+                <h2>Connexion</h2>
+                <div class="field">
+                    <label for="login-username">Nom d'utilisateur</label>
+                    <input id="login-username" type="text" name="username" required autocomplete="username">
+                </div><div class="field">
+                    <label for="login-password">Mot de passe</label>
+                    <input id="login-password" type="password" name="pwd" placeholder="pwd" required autocomplete="current-password" >
+                </div>
+                <input type="submit" value="Se connecter" class="bouton">
+            </form>
+        </div>
+
+        <div id="register" class="auth">
+            <form method="post" action="">
+                <h2>Inscription</h2>
+                <div class="field">
+                    <label for="register-username">Nom d'utilisateur</label>
+                    <input id="register-username" type="text" name="username" required autocomplete="username">
+                </div>
+                <div class="field">
+                    <label for="register-email">Addresse e-mail</label>
+                    <input id="register-email" type="email" name="email" placeholder="dupont@mailer.tv" required>
+                </div>
+                <div class="field">
+                    <label for="register-password1">Mot de passe</label>
+                    <input id="register-password1" type="password" name="pwd" placeholder="pwd" required autocomplete="new-password">
+                </div>
+                <div class="field">
+                    <label for="register-password2">Confirmer votre mot de passe</label>
+                    <input id="register-password2" type="password" name="pwd2" placeholder="pwd" required autocomplete="new-password">
+                </div>
+                <input type="submit" value="S'inscrire" class="bouton">
+            </form>
+        </div>
+  </div>
+    <script src="js/main.js"></script>
+
 </body>
 </html>
