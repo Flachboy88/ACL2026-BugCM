@@ -1,0 +1,77 @@
+@startuml
+
+class CalendrierController {
+    - vue: CalendrierView
+    - model: Model
+    --
+    + demarrer(): void
+    + gererCreneauSelectionne(debut: Date, fin: Date): void
+    + gererClicActivite(idActivite: int): void
+    + gererClicDroitActivite(idActivite: int): void
+    + gererValidationFormulaire(): void
+    + gererCaseAgenda(idAgenda: int, estCochee: boolean): void
+    + gererCreationAgenda(): void
+    + gererDeconnexion(): void
+}
+
+class CalendrierView {
+    - calendrier: FullCalendar.Calendar
+    - elementListeAgendas: HTMLElement
+    - elementModale: HTMLElement
+    --
+    + constructor(controller: CalendrierController)
+    + afficherCalendrier(): void
+    + afficherListeAgendas(agendas: Agenda[]): void
+    + afficherAgendaDansCalendrier(agenda: Agenda): void
+    + retirerAgendaDuCalendrier(idAgenda: int): void
+    + rafraichirCalendrier(): void
+    + ouvrirModaleActivite(activite: Activite): void
+    + fermerModale(): void
+    + recupererDonneesFormulaire(): object
+    + demanderConfirmation(message: string): boolean
+}
+
+class Model {
+    - utilisateurConnecte: Utilisateur
+    - agendas: Agenda[]
+    --
+    + chargerUtilisateurConnecte(): Promise<Utilisateur>
+    + chargerAgendas(): Promise<Agenda[]>
+    + creerAgenda(nom: string, couleur: string, description: string): Promise<Agenda>
+    + ajouterActivite(idAgenda: int, donnees: object): Promise<Activite>
+    + modifierActivite(idActivite: int, donnees: object): Promise<Activite>
+    + supprimerActivite(idActivite: int): Promise<void>
+    + deconnecter(): Promise<void>
+}
+
+class Utilisateur {
+    + idUtilisateur: int
+    + nom: string
+    + email: string
+}
+
+class Agenda {
+    + idAgenda: int
+    + nom: string
+    + couleur: string
+    + description: string
+}
+
+class Activite {
+    + idActivite: int
+    + idAgenda: int
+    + titre: string
+    + debut: string
+    + fin: string
+    + lieu: string
+    + description: string
+}
+
+CalendrierController --> CalendrierView : pilote
+CalendrierView ..> CalendrierController : transmet les actions\nde l'utilisateur
+CalendrierController --> Model : demande / modifie\nles données
+Model --> "1" Utilisateur
+Model --> "0..*" Agenda
+Model ..> Activite : crée / modifie\nvia l'API
+Agenda "1" o-- "0..*" Activite: contient
+@enduml
