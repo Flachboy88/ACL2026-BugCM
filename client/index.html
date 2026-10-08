@@ -2,52 +2,38 @@
 <html lang="fr">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Démo FullCalendar Premium (Modulaire)</title>
-    <title>Agenda BugCM</title>
+    <meta charset="UTF-8">
+    <title>Acceuil</title>
     <link rel="stylesheet" href="css/style.css">
-  <!-- CDN FullCalendar Scheduler (Premium) -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.11/index.global.min.js"></script>
-  <script type="module" src="js/main.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 30px;
-    }
-    #calendar {
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-</style>
 </head>
 <body>
     <div id="header">
         <h1>Agenda BugCM</h1>
-        <p>Statut du serveur : <span id="server-status">...</span></p>
     </div>
 
     <div id="auth_container">
-        <div id="login" class="auth">
-            <form method="post" action="">
+        <div id="view-login" class="view">
+            <form id="form-login">
                 <h2>Connexion</h2>
                 <div class="field">
                     <label for="login-username">Nom d'utilisateur</label>
-                    <input id="login-username" type="text" name="username" required autocomplete="username">
-                </div><div class="field">
+                    <input id="login-username" type="text" name="username" placeholder="jeanDupond55"  required autocomplete="username">
+                </div>
+                <div class="field">
                     <label for="login-password">Mot de passe</label>
                     <input id="login-password" type="password" name="pwd" placeholder="pwd" required autocomplete="current-password" >
                 </div>
                 <input type="submit" value="Se connecter" class="bouton">
             </form>
+            <p class="switch">Pas de compte ? <a href="#/register">S'inscrire</a></p>
         </div>
 
-        <div id="register" class="auth">
-            <form method="post" action="">
+        <div id="view-register" class="view">
+            <form id="form-register">
                 <h2>Inscription</h2>
                 <div class="field">
                     <label for="register-username">Nom d'utilisateur</label>
-                    <input id="register-username" type="text" name="username" required autocomplete="username">
+                    <input id="register-username" type="text" name="username" placeholder="jeanDupond55" required autocomplete="username">
                 </div>
                 <div class="field">
                     <label for="register-email">Addresse e-mail</label>
@@ -63,9 +49,12 @@
                 </div>
                 <input type="submit" value="S'inscrire" class="bouton">
             </form>
+            <p class="switch">Déjà inscrit ? <a href="#/login">Se connecter</a></p>
         </div>
-  </div>
-    <script src="js/main.js"></script>
+
+    </div>
+    
+    <script type="module" src="js/main.js"></script>
 
 </body>
 </html>
