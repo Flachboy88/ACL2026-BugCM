@@ -1,7 +1,4 @@
-// Asks the API if the server is running and shows the answer on the page
-async function showServerStatus() {
-    const statusElement = document.getElementById("server-status");
-
+import { createCalendar } from './calendar.js';
     try {
         const response = await fetch("/api/status");
         const data = await response.json();
@@ -14,3 +11,4 @@ async function showServerStatus() {
 }
 
 showServerStatus();
+
