@@ -1,15 +1,27 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Démo FullCalendar Premium (Modulaire)</title>
     <title>Agenda BugCM</title>
     <link rel="stylesheet" href="css/style.css">
+  <!-- CDN FullCalendar Scheduler (Premium) -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.11/index.global.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+    }
+    #calendar {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+</style>
 </head>
 <body>
-    <h1>Agenda BugCM</h1>
-    <p>Statut du serveur : <span id="server-status">...</span></p>
-
-    <script src="js/main.js"></script>
+  <div id="calendar"></div>
 </body>
 </html>
