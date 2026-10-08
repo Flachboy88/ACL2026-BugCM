@@ -7,6 +7,10 @@ const CLIENT_FOLDER = path.join(__dirname, "..", "client");
 
 const app = express();
 
+// Engine for templeate (include header), page are in client/views
+app.set("view engine", "ejs");
+app.set("views", path.join(CLIENT_FOLDER, "views"));
+
 // Lets the API read JSON sent by the client
 app.use(express.json());
 
@@ -16,7 +20,36 @@ app.get("/api/status", function (request, response) {
 });
 
 // Web pages: everything else is served from the client folder
-app.use(express.static(CLIENT_FOLDER));
+//app.use(express.static(CLIENT_FOLDER));
+// Web pages (render with EJS)
+// TODO: remplacer par la vraie vérification de session (autre personne)
+function isLoggedIn(request) {
+    return false;
+}
+
+function requireAuth(request, response, next) {
+    if (isLoggedIn(request)) return next();
+    response.redirect("/login");
+}
+
+function requireGuest(request, response, next) {
+    if (isLoggedIn(request)) return response.redirect("/");
+    next();
+}
+
+app.get("/", requireAuth, function (request, response) {
+    response.render("index");
+});
+app.get("/login", requireGuest, function (request, response) {
+    response.render("login");
+});
+app.get("/register", requireGuest, function (request, response) {
+    response.render("register");
+});
+
+// Assets statiques : seulement css et js (pas views/, sinon les .ejs seraient exposés)
+app.use("/css", express.static(path.join(CLIENT_FOLDER, "css")));
+app.use("/js", express.static(path.join(CLIENT_FOLDER, "js")));
 
 // Updates the database tables first, then starts the web server
 try {
