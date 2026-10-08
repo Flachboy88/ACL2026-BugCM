@@ -50,13 +50,13 @@ La connexion est ouverte une seule fois dans `server/database.js`. Pour l'utilis
 const database = require("./database");
 
 // Lire plusieurs lignes
-const agendas = database.prepare("SELECT * FROM agenda WHERE utilisateur_id = ?").all(userId);
+const agendas = database.prepare("SELECT * FROM agenda WHERE id_utilisateur = ?").all(idUtilisateur);
 
 // Lire une seule ligne (undefined si rien n'est trouvé)
-const agenda = database.prepare("SELECT * FROM agenda WHERE id = ?").get(agendaId);
+const agenda = database.prepare("SELECT * FROM agenda WHERE id_agenda = ?").get(idAgenda);
 
 // Ajouter / modifier / supprimer
-const result = database.prepare("INSERT INTO agenda (nom, couleur) VALUES (?, ?)").run(name, color);
+const result = database.prepare("INSERT INTO agenda (nom, couleur, id_utilisateur) VALUES (?, ?, ?)").run(nom, couleur, idUtilisateur);
 console.log(result.lastInsertRowid); // id de la ligne créée
 ```
 
@@ -117,7 +117,7 @@ Résultat : quand quelqu'un ajoute une migration, les autres font `git pull` pui
 | Nombre entier / booléen | `INTEGER` (booléen : `0` ou `1`) |
 | Date et heure | `TEXT` au format ISO : `'2026-10-15T14:30:00Z'`. Ce format se trie et se compare correctement (`WHERE debut >= '2026-10-12'`) |
 | Date actuelle par défaut | `DEFAULT CURRENT_TIMESTAMP` |
-| Clé étrangère | `agenda_id INTEGER NOT NULL REFERENCES agenda(id) ON DELETE CASCADE` |
+| Clé étrangère | `id_agenda INTEGER NOT NULL REFERENCES agenda(id_agenda) ON DELETE CASCADE` |
 | Vérification | `CHECK (fin > debut)` |
 
 > Les clés étrangères sont **activées** par `server/database.js` : une ligne qui pointe vers une ligne inexistante est refusée.
