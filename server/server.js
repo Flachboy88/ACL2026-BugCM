@@ -20,30 +20,16 @@ app.get("/api/status", function (request, response) {
 });
 
 // Web pages: everything else is served from the client folder
-//app.use(express.static(CLIENT_FOLDER));
-// Web pages (render with EJS)
-// TODO: remplacer par la vraie vérification de session (autre personne)
-function isLoggedIn(request) {
-    return false;
-}
+app.use(express.static(CLIENT_FOLDER));
 
-function requireAuth(request, response, next) {
-    if (isLoggedIn(request)) return next();
-    response.redirect("/login");
-}
-
-function requireGuest(request, response, next) {
-    if (isLoggedIn(request)) return response.redirect("/");
-    next();
-}
-
-app.get("/", requireAuth, function (request, response) {
+// Web pages (rendered with EJS)
+app.get("/", function (request, response) {
     response.render("index");
 });
-app.get("/login", requireGuest, function (request, response) {
+app.get("/login", function (request, response) {
     response.render("login");
 });
-app.get("/register", requireGuest, function (request, response) {
+app.get("/register", function (request, response) {
     response.render("register");
 });
 
