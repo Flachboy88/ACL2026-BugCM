@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import database from "./database.js";
 
-const MIGRATIONS_FOLDER = path.join(__dirname, "..", "database", "migrations");
+const MIGRATIONS_FOLDER = path.join(import.meta.dirname, "..", "database", "migrations");
 
 // Runs, in order, every migration file that has not been applied to the database yet
 function runMigrations() {

@@ -3,7 +3,7 @@ import path from "path";
 import Database from "better-sqlite3";
 
 
-const DATA_FOLDER = path.join(__dirname, "..", "data");
+const DATA_FOLDER = path.join(import.meta.dirname, "..", "data");
 const DATABASE_FILE = path.join(DATA_FOLDER, "agenda.db");
 
 // The data folder is not in Git, so it may not exist yet
