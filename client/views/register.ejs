@@ -4,12 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Inscription - Agenda BugCM</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div id="header">
-        <h1>Agenda BugCM</h1>
-    </div>
+    
+    <%- include('partials/header') %>
 
     <div id="auth_container">
         <div class="auth">
@@ -33,9 +32,11 @@
                 </div>
                 <input type="submit" value="S'inscrire" class="bouton">
             </form>
-            <p class="switch">Déjà inscrit ? <a href="connexion.html">Se connecter</a></p>
+            <p class="switch">Déjà inscrit ? <a href="/login">Se connecter</a></p>
         </div>
     </div>
+    
+    <script src="/js/main.js"></script>
 
 </body>
 </html>
