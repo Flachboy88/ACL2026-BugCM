@@ -1,9 +1,9 @@
-const path = require("path");
-const express = require("express");
-const runMigrations = require("./migrations");
+import path from "path";
+import express from "express";
+import runMigrations from "./migrations.js"
 
 const PORT = 3000;
-const CLIENT_FOLDER = path.join(__dirname, "..", "client");
+const CLIENT_FOLDER = path.join(import.meta.dirname, "..", "client");
 
 const app = express();
 

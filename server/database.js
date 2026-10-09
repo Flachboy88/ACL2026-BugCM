@@ -1,8 +1,9 @@
-const fs = require("fs");
-const path = require("path");
-const Database = require("better-sqlite3");
+import fs from "fs";
+import path from "path";
+import Database from "better-sqlite3";
 
-const DATA_FOLDER = path.join(__dirname, "..", "data");
+
+const DATA_FOLDER = path.join(import.meta.dirname, "..", "data");
 const DATABASE_FILE = path.join(DATA_FOLDER, "agenda.db");
 
 // The data folder is not in Git, so it may not exist yet
@@ -15,4 +16,4 @@ const database = new Database(DATABASE_FILE);
 // SQLite ignores foreign keys unless we turn them on
 database.pragma("foreign_keys = ON");
 
-module.exports = database;
+export default database;
