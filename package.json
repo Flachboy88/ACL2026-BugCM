@@ -1,11 +1,12 @@
 {
   "name": "agenda-bugcm",
-  "type":"module",
+  "type": "module",
   "version": "0.1.0",
   "description": "Application Web de gestion d'agendas (projet ACL 2026, équipe BugCM)",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
+    "dev": "nodemon server/server.js",
     "db:reset": "node server/resetDatabase.js"
   },
   "engines": {
@@ -20,5 +21,8 @@
   },
   "allowScripts": {
     "better-sqlite3@12.11.1": true
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }
