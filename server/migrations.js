@@ -1,6 +1,6 @@
-const fs = require("fs");
-const path = require("path");
-const database = require("./database");
+import fs from "fs";
+import path from "path";
+import database from "./database.js";
 
 const MIGRATIONS_FOLDER = path.join(__dirname, "..", "database", "migrations");
 
@@ -63,4 +63,4 @@ function applyMigration(fileName) {
     }
 }
 
-module.exports = runMigrations;
+export default runMigrations;

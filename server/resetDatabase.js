@@ -1,7 +1,8 @@
 // Deletes the local database file. The next "npm start" recreates it and applies every migration.
 // Used by "npm run db:reset". The server must be stopped first.
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
+
 
 // Same file as in server/database.js
 const DATABASE_FILE = path.join(__dirname, "..", "data", "agenda.db");
