@@ -1,6 +1,7 @@
 import path from "path";
 import express from "express";
 import runMigrations from "./migrations.js"
+import database from "./database.js";
 
 const PORT = 3000;
 const CLIENT_FOLDER = path.join(import.meta.dirname, "..", "client");
@@ -36,6 +37,31 @@ app.get("/register", function (request, response) {
 // Assets statiques : seulement css et js (pas views/, sinon les .ejs seraient exposés)
 app.use("/css", express.static(path.join(CLIENT_FOLDER, "css")));
 app.use("/js", express.static(path.join(CLIENT_FOLDER, "js")));
+
+app.post("/api/auth/login", function (request, response){
+    const {email, password} = request.body;
+    const user = database.prepare("SELECT * FROM utilisateur WHERE email = ? AND mot_de_passe_hash = ?").get(email, password);
+    if(typeof(user) === "undefined"){
+        return response.status(401).json({erreur: "Identifiants incorrects"});
+    } else {
+        response.json({id: user.id_utilisateur});
+    }
+});
+
+app.post("/api/auth/register", function (request, response){
+    const {userName, email, password, confirmPassword} = request.body;
+    const userExists = database.prepare("SELECT * FROM utilisateur WHERE email = ?").get(email);
+    if(userExists === undefined){
+        if(password === confirmPassword){
+            const user = database.prepare("INSERT INTO utilisateur (nom, email, mot_de_passe_hash) VALUES (?, ?, ?)").run(userName, email, password);
+            response.redirect("/");
+        } else {
+            return response.status(401).json({erreur: "Mot de passe différents"});
+        }
+    } else {
+        return response.status(400).json({erreur: "Email déjà pris"});
+    }
+});
 
 // Updates the database tables first, then starts the web server
 try {
