@@ -1,27 +1,79 @@
 import { resources, initialEvents } from './events.js';
 
+export function getScrollTime() {
+  const h = Math.max(new Date().getHours() - 1, 0);
+  return `${String(h).padStart(2, '0')}:00:00`;
+}
+
+//init agenda button
+export function initAgendaPanel(calendar, panelId){
+    //HTML div to display agenda
+    const panel = document.getElementById(panelId);
+
+    //catch ressource to display with there params and events
+    const displayRessource = r => ({
+        id: r.id,
+        color: r.eventColor || undefined,
+        events: initialEvents.filter(e => e.resourceId === r.id)
+    });
+
+    //rebuild 'view' foreach agenda
+    resources.forEach(r => {
+        calendar.addEventSource(displayRessource(r));
+
+        const div = document.createElement('div');
+        const label = document.createElement('label');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = true;
+        cb.addEventListener('change', () => {
+            if (cb.checked) calendar.addEventSource(displayRessource(r));
+            else calendar.getEventSourceById(r.id)?.remove();
+        });
+        label.append(r.title);
+        div.append(cb, label);
+        panel.append(div);
+
+        div.classList.add('agenda');
+        div.id = r.id;
+        div.style.setProperty('--agenda-color', r.eventColor || '#94a3b8');
+        div.addEventListener('click', e => {
+            if (e.target !== cb) cb.click();
+        });
+        cb.style.accentColor = r.eventColor;
+    });
+}
+
+
+
 export function createCalendar(elementId) {
   const calendarEl = document.getElementById(elementId);
 
   return new FullCalendar.Calendar(calendarEl, {
-    // Clé d'évaluation 
+    // Clé d'évaluation
     schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
 
-    initialView: 'resourceTimelineWeek',
+    initialView: 'timeGridWeek',
     locale: 'fr',
+    firstDay: 1,
+    height: '100%',
+
+    //display indicator on current hour
+    nowIndicator: true,
+    scrollTime: getScrollTime(),
 
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'resourceTimelineDay,resourceTimelineWeek,dayGridMonth,listWeek'
+      right: 'timeGridDay,timeGridWeek,dayGridMonth,listWeek'
     },
 
     editable: true,
     selectable: true,
 
     // Chargement des données
-    resources: resources,
-    events: initialEvents,
+    //resources: resources,
+    //events: initialEvents,
 
     // Gestion des clicks pour les activitées
     select(info) {
@@ -48,6 +100,11 @@ export function createCalendar(elementId) {
       if (confirm(`${msg}\n\nVoulez-vous supprimer cet événement ?`)) {
         info.event.remove();
       }
+    },
+
+    //function for today button
+    datesSet(){
+        this.scrollToTime(getScrollTime());
     }
   });
 }

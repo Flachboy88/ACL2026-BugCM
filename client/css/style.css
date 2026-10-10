@@ -5,6 +5,7 @@
     --border: #e5e7eb;
     --primary: #2563eb;
     --primary-hover: #1d4ed8;
+    --page-padding: 16px;
 }
 
 * {
@@ -18,7 +19,10 @@ body {
     background: var(--bg);
     color: var(--text);
     margin: 0;
-    padding: 16px;
+    padding: var(--page-padding);
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
 }
 
 #header{
@@ -112,13 +116,77 @@ label {
 }
 
 
-
-#calendar {
-    max-width: 1100px;
-    margin: 0 auto;
+#containter{    
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 24px;
+    flex: 1;
+    min-height: 0;
 }
 
+#calendar {
+    min-height: 0;
+    grid-column: 2;
+    background: var(--surface);
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+}
 
+#agenda_panel{
+    grid-column: 1;
+    background: var(--surface);
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+#agenda_panel > * {
+    width: 100%;
+    margin: 0;
+}
+
+#agenda_panel h2 {
+    text-align: center;
+}
+
+#agenda_list{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.agenda{
+    padding: 4px;
+    padding-left: 8px;
+    border-radius: 25px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    transition: background-color .2s;
+    cursor: pointer;
+    user-select: none;
+}
+
+.agenda:hover{
+    background-color: color-mix(in srgb, var(--agenda-color) 15%, white);    
+}
+
+.agenda input{
+    width: auto;
+    padding: 0;
+}
+
+.agenda label{
+    margin: 0;
+}
 
 @keyframes apparition {
     from {

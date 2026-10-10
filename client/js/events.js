@@ -1,12 +1,12 @@
 export const resources = [
-    { id: 'a', title: 'Salle Réunion 101' },
-    { id: 'b', title: 'Salle Réunion 102' },
-    { id: 'c', title: 'Paul (Développeur)' },
-    { id: 'd', title: 'Sophie (Designer)' },
-    { id: 'e', title: 'TEST A' },
-    { id: 'f', title: 'TEST B' },
-    { id: 'g', title: 'TEST C' },
-    { id: 'h', title: 'TEST D' }
+    { id: 'a', title: 'Salle Réunion 101', eventColor: '#3788d8' },
+    { id: 'b', title: 'Salle Réunion 102', eventColor: '' },
+    { id: 'c', title: 'Paul (Développeur)', eventColor: '#28a745' },
+    { id: 'd', title: 'Sophie (Designer)', eventColor: '#6f42c1' },
+    { id: 'e', title: 'TEST A', eventColor: '' },
+    { id: 'f', title: 'TEST B', eventColor: '#6f42ff' },
+    { id: 'g', title: 'TEST C', eventColor: '' },
+    { id: 'h', title: 'TEST D', eventColor: '' }
 ];
 
 export const initialEvents = [
@@ -16,7 +16,6 @@ export const initialEvents = [
     title: "Réunion d'équipe",
     start: '2026-10-04T09:00:00',
     end: '2026-10-04T11:00:00',
-    color: '#3788d8',
     extendedProps: {
       location: 'Salle 101',
       description: 'Point d\'avancement de la semaine'
@@ -28,7 +27,6 @@ export const initialEvents = [
     title: 'Développement API',
     start: '2026-10-04T10:00:00',
     end: '2026-10-04T16:00:00',
-    color: '#28a745',
     extendedProps: {
       description: 'Implémentation des endpoints Premium'
     }
@@ -39,7 +37,6 @@ export const initialEvents = [
     title: 'Maquettes UI/UX',
     start: '2026-10-04T14:00:00',
     end: '2026-10-04T18:00:00',
-    color: '#6f42c1',
     extendedProps: {
       description: 'Design du composant calendrier'
     }
@@ -50,7 +47,6 @@ export const initialEvents = [
     title: 'Maquettes UI/UX',
     start: '2026-10-14T14:00:00',
     end: '2026-10-14T18:00:00',
-    color: '#6f42c1',
     extendedProps: {
       description: 'Design du composant calendrier'
     }
@@ -61,7 +57,6 @@ export const initialEvents = [
     title: 'Maquettes UI/UX',
     start: '2026-10-15T14:00:00',
     end: '2026-10-15T18:00:00',
-    color: '#6f42c1',
     extendedProps: {
       description: 'Design du composant calendrier'
     }
@@ -72,7 +67,6 @@ export const initialEvents = [
     title: 'Maquettes UI/UX',
     start: '2026-10-15T14:00:00',
     end: '2026-10-15T18:00:00',
-    color: '#6f42c1',
     extendedProps: {
       description: 'Design du composant calendrier'
     }
@@ -83,7 +77,6 @@ export const initialEvents = [
     title: 'AAAAAAAAAAAAAAA',
     start: '2026-10-16T14:00:00',
     end: '2026-10-16T18:00:00',
-    color: '#6f42c1',
     extendedProps: {
       description: 'Design du composant calendrier'
     }
