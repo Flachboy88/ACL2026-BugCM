@@ -6,7 +6,7 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
-    "dev": "nodemon server/server.js",
+    "dev": "node --watch server/server.js",
     "db:reset": "node server/resetDatabase.js"
   },
   "engines": {
@@ -21,8 +21,5 @@
   },
   "allowScripts": {
     "better-sqlite3@12.11.1": true
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.14"
   }
 }
