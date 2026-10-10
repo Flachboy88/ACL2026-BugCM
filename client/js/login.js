@@ -8,6 +8,6 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
     body: JSON.stringify({email, password})
   });
   if(res.ok){
-    
+    window.location.href = "/";
   }
 });

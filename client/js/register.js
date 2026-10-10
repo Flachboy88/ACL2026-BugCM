@@ -10,6 +10,6 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
     body: JSON.stringify({userName, email, password, confirmPassword})
   });
   if(res.ok){
-    
+    window.location.href = "/";
   }
 });
