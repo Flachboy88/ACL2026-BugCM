@@ -6,6 +6,8 @@ import { createServer } from "http";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import agendasRouter from "./routes/agendas.js";
+import activitesRouter from "./routes/activites.js";
 
 dotenv.config();
 const PORT = 3000;
@@ -20,6 +22,9 @@ app.set("views", path.join(CLIENT_FOLDER, "views"));
 
 // Lets the API read JSON sent by the client
 app.use(express.json());
+// API routers: agendas and their activities
+app.use("/api", agendasRouter);
+app.use("/api", activitesRouter);
 app.use(cookieParser()).use(auth);
 
 // Web pages: everything else is served from the client folder
