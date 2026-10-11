@@ -1,4 +1,4 @@
-import { resources, initialEvents } from './events.js';
+import { initialEvents } from './events.js';
 
 export function getScrollTime() {
   const h = Math.max(new Date().getHours() - 1, 0);
@@ -6,11 +6,11 @@ export function getScrollTime() {
 }
 
 //init agenda button
-export function initAgendaPanel(calendar, panelId){
+export function initAgendaPanel(calendar, panelId, agendas){
     //HTML div to display agenda
     const panel = document.getElementById(panelId);
     //rebuild 'view' foreach agenda
-    resources.forEach(r => addAgendaToPanel(calendar, panel, r));
+    agendas.forEach(r => addAgendaToPanel(calendar, panel, r));
 }
 
 export function createCalendar(elementId) {
