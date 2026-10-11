@@ -15,7 +15,7 @@ function toJson(row) {
     };
 }
 
-// Heure Format US -> Format France 
+// Convertit une date reçue en texte ISO UTC ("...Z"), ou null si elle est invalide
 function toUtc(value) {
     const date = new Date(value);
     return isNaN(date.getTime()) ? null : date.toISOString();
@@ -30,7 +30,7 @@ router.get("/agendas/:idAgenda/activites", function (request, response) {
     if (start === null || end === null) {
         return response.status(400).json({ erreur: "Période invalide" });
     }
-    // Eviter de charger toute la database comme un bléreau
+    // Seulement les activités qui chevauchent la période affichée
     const rows = database.prepare(
         "SELECT * FROM activite WHERE id_agenda = ? AND debut < ? AND fin > ?"
     ).all(request.params.idAgenda, end, start);
