@@ -18,6 +18,13 @@
             <h2>Mes agendas</h2>
             <hr>
             <div id="agenda_list"></div>
+
+            <form id="agenda_form">
+                <label for="agenda_nom"></label><input type="text" id="agenda_nom" placeholder="Nom de l'agenda" required>
+                <label for="agenda_couleur"></label><input type="color" id="agenda_couleur" value="#3788d8">
+                <button type="submit">Créer</button>
+                <p id="agenda_erreur"></p>
+            </form>
         </div>
         
         <div id="calendar"></div>

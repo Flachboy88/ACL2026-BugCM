@@ -1,4 +1,4 @@
-import { resources, initialEvents } from './events.js';
+import { initialEvents } from './events.js';
 
 export function getScrollTime() {
   const h = Math.max(new Date().getHours() - 1, 0);
@@ -6,45 +6,12 @@ export function getScrollTime() {
 }
 
 //init agenda button
-export function initAgendaPanel(calendar, panelId){
+export function initAgendaPanel(calendar, panelId, agendas){
     //HTML div to display agenda
     const panel = document.getElementById(panelId);
-
-    //catch ressource to display with there params and events
-    const displayRessource = r => ({
-        id: r.id,
-        color: r.eventColor || undefined,
-        events: initialEvents.filter(e => e.resourceId === r.id)
-    });
-
     //rebuild 'view' foreach agenda
-    resources.forEach(r => {
-        calendar.addEventSource(displayRessource(r));
-
-        const div = document.createElement('div');
-        const label = document.createElement('label');
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = true;
-        cb.addEventListener('change', () => {
-            if (cb.checked) calendar.addEventSource(displayRessource(r));
-            else calendar.getEventSourceById(r.id)?.remove();
-        });
-        label.append(r.title);
-        div.append(cb, label);
-        panel.append(div);
-
-        div.classList.add('agenda');
-        div.id = r.id;
-        div.style.setProperty('--agenda-color', r.eventColor || '#94a3b8');
-        div.addEventListener('click', e => {
-            if (e.target !== cb) cb.click();
-        });
-        cb.style.accentColor = r.eventColor;
-    });
+    agendas.forEach(r => addAgendaToPanel(calendar, panel, r));
 }
-
-
 
 export function createCalendar(elementId) {
   const calendarEl = document.getElementById(elementId);
@@ -107,4 +74,37 @@ export function createCalendar(elementId) {
         this.scrollToTime(getScrollTime());
     }
   });
+}
+
+//catch ressource to display with there params and events
+const displayRessource = r => ({
+    id: r.id,
+    color: r.eventColor || undefined,
+    events: initialEvents.filter(e => e.resourceId === r.id)
+});
+
+export function addAgendaToPanel(calendar, panel, r) {
+    calendar.addEventSource(displayRessource(r));
+
+    const div = document.createElement('div');
+    const label = document.createElement('label');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = true;
+    cb.addEventListener('change', () => {
+        if (cb.checked) calendar.addEventSource(displayRessource(r));
+        else calendar.getEventSourceById(r.id)?.remove();
+    });
+    label.append(r.title);
+    div.append(cb, label);
+    panel.append(div);
+
+    div.classList.add('agenda');
+    div.id = r.id;
+    div.style.setProperty('--agenda-color', r.eventColor || '#94a3b8');
+    div.addEventListener('click', e => {
+        if (e.target !== cb) cb.click();
+    });
+    cb.style.accentColor = r.eventColor;
+
 }
