@@ -44,21 +44,72 @@ export function initAgendaPanel(calendar, panelId){
     });
 }
 
+/**
+ * Parser pour l'API FullCalender
+ */
+function transformEvent(activite) {
+  return {
+    id: String(activite.idActivite),
+    title: activite.titre,
+    start: activite.debut,
+    end: activite.fin,
+    extendedProps: { 
+      lieu: activite.lieu, 
+      description: activite.description 
+    }
+  };
+}
 
+/**
+ * Gère la création d'une activité lors de la sélection d'un créneau horaire.
+ */
+async function handleSelect(info) {
+  const calendar = info.view.calendar;
+  calendar.unselect();
 
+  const titre = prompt("Nom de l'activité :");
+  if (!titre) return; // Empeche les cas en cas de fermeture fenêtre ou de string null
+
+  const idAgenda = 1; // agenda sélectionne. Provisoire
+
+  // Charger les données de l'ID agenda
+  const reponse = await fetch(`/api/agendas/${idAgenda}/activites`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ 
+      titre, 
+      debut: info.start.toISOString(), 
+      fin: info.end.toISOString() 
+    })
+  });
+
+  // Getsion d'erreur
+  if (!reponse.ok) {
+    const { erreur } = await reponse.json();
+    alert(erreur);
+    return;
+  }
+
+  // Appel de la vue
+  calendar.refetchEvents();
+}
+
+/**
+ * Initialise et configure FullCalendar.
+ */
 export function createCalendar(elementId) {
   const calendarEl = document.getElementById(elementId);
 
   return new FullCalendar.Calendar(calendarEl, {
-    // Clé d'évaluation
     schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
 
+    // Config visuelle et locale
     initialView: 'timeGridWeek',
     locale: 'fr',
     firstDay: 1,
     height: '100%',
 
-    //display indicator on current hour
+    // Navigation & temps
     nowIndicator: true,
     scrollTime: getScrollTime(),
 
@@ -71,40 +122,21 @@ export function createCalendar(elementId) {
     editable: true,
     selectable: true,
 
-    // Chargement des données
-    //resources: resources,
-    //events: initialEvents,
-
-    // Gestion des clicks pour les activitées
-    select(info) {
-      const title = prompt('Nom de l\'activité :');
-      if (title) {
-        this.addEvent({
-          title,
-          start: info.startStr,
-          end: info.endStr,
-          allDay: info.allDay,
-          resourceId: info.resource ? info.resource.id : null, // Associe à la ressource cliquée
-          color: '#3788d8'
-        });
+    // Chargement des événements
+    eventSources: [
+      {
+        id: "1",
+        url: "/api/agendas/1/activites",
+        color: "#3788d8",
+        eventDataTransform: transformEvent
       }
-      this.unselect();
-    },
+    ],
 
-    // Détails du clic
-    eventClick(info) {
-      const props = info.event.extendedProps;
-      let msg = `📌 ${info.event.title}`;
-      if (props.description) msg += `\n ${props.description}`;
+    // Handlers des activitées ( creation, suppression, ...)
+    select: handleSelect,
 
-      if (confirm(`${msg}\n\nVoulez-vous supprimer cet événement ?`)) {
-        info.event.remove();
-      }
-    },
-
-    //function for today button
-    datesSet(){
-        this.scrollToTime(getScrollTime());
+    datesSet() {
+      this.scrollToTime(getScrollTime());
     }
   });
 }

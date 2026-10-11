@@ -1,6 +1,7 @@
 import path from "path";
 import express from "express";
 import runMigrations from "./migrations.js"
+import activitesRouter from "./routes/activites.js";
 
 const PORT = 3000;
 const CLIENT_FOLDER = path.join(import.meta.dirname, "..", "client");
@@ -13,6 +14,7 @@ app.set("views", path.join(CLIENT_FOLDER, "views"));
 
 // Lets the API read JSON sent by the client
 app.use(express.json());
+app.use("/api", activitesRouter);
 
 // API routes: everything under /api
 app.get("/api/status", function (request, response) {
