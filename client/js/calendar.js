@@ -95,6 +95,26 @@ async function handleSelect(info) {
 }
 
 /**
+ * Gère la suppression d'une activité au clic sur celle-ci.
+ */
+async function handleEventClick(info) {
+  const props = info.event.extendedProps;
+  let msg = `${info.event.title}`;
+  if (props.description) msg += `\n ${props.description}`;
+
+  if (!confirm(`${msg}\n\n Souhaitez-vous supprimer cette activité ?`)) return;
+
+  // Fetch de l'event pour le delete
+  const reponse = await fetch(`/api/activites/${info.event.id}`, { method: "DELETE" });
+
+  if (reponse.ok) {
+    info.event.remove();
+  } else {
+    alert("Suppression impossible");
+  }
+}
+
+/**
  * Initialise et configure FullCalendar.
  */
 export function createCalendar(elementId) {
@@ -134,6 +154,7 @@ export function createCalendar(elementId) {
 
     // Handlers des activitées ( creation, suppression, ...)
     select: handleSelect,
+    eventClick: handleEventClick,
 
     datesSet() {
       this.scrollToTime(getScrollTime());
