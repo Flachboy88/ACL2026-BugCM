@@ -98,6 +98,12 @@ label {
     margin-bottom: 16px;
 }
 
+/* Error message under a form */
+.erreur {
+    color: #dc2626;
+    font-size: 14px;
+}
+
 
 .bouton {
     width: 100%;
