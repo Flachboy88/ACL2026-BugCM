@@ -44,6 +44,30 @@ body {
     font-size: 14px;
 }
 
+.bouton_deconnexion{
+    width: 100%;
+    border-radius: 8px;
+    background-color: var(--primary);
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    max-width: 200px;
+    min-width: 150px;
+    border: none;
+    transition: background-color .2s;
+    justify-self: end;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.bouton_deconnexion:hover{
+    background-color: var(--primary-hover);
+}
+
+.login .bouton_deconnexion, .register .bouton_deconnexion{
+    display: none;
+}
+
 #auth_container{
     animation: apparition 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
     background: var(--surface);

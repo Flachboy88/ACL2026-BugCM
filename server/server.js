@@ -69,6 +69,11 @@ app.post("/register", function (request, response){
     }
 });
 
+app.post("/logout" ,function logout(req,res) {
+    res.cookie('accessToken', null);
+    res.redirect('/login');
+});
+
 // Web pages (rendered with EJS)
 app.get("/", requireLogin, function (request, response) {
     response.render("index");
