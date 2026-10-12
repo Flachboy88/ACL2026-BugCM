@@ -12,5 +12,8 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
   const data = await res.json();
   if(res.ok){
     window.location.href = data.path;
+  } else {
+    // Shows the server message (email taken, different passwords...)
+    document.getElementById("register-erreur").textContent = data.erreur;
   }
 });

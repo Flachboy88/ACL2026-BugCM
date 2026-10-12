@@ -6,9 +6,9 @@ const router = express.Router();
 // Format #RRGGBB, comme dans conception.md (c'est aussi ce que donne <input type="color">)
 const COULEUR_VALIDE = /^#[0-9a-fA-F]{6}$/;
 
-// TODO session : remplacer par request.session.idUtilisateur quand la connexion la remplit
-function getIdUtilisateur(request) {
-    return 1;
+// Id de l'utilisateur connecté, lu dans le token par le middleware auth de server.js
+function getIdUtilisateur(response) {
+    return response.locals.user.id;
 }
 
 // Une ligne de la table -> le JSON décrit dans conception.md
@@ -25,7 +25,7 @@ function toJson(row) {
 router.get("/agendas", function (request, response) {
     const rows = database.prepare(
         "SELECT * FROM agenda WHERE id_utilisateur = ? ORDER BY nom"
-    ).all(getIdUtilisateur(request));
+    ).all(getIdUtilisateur(response));
     response.json(rows.map(toJson));
 });
 
@@ -40,7 +40,7 @@ router.post("/agendas", function (request, response) {
     }
     const result = database.prepare(
         "INSERT INTO agenda (nom, couleur, description, id_utilisateur) VALUES (?, ?, ?, ?)"
-    ).run(nom.trim(), couleur, description ?? null, getIdUtilisateur(request));
+    ).run(nom.trim(), couleur, description ?? null, getIdUtilisateur(response));
     const row = database.prepare("SELECT * FROM agenda WHERE id_agenda = ?").get(result.lastInsertRowid);
     response.status(201).json(toJson(row));
 });

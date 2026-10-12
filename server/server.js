@@ -23,13 +23,13 @@ app.set("views", path.join(CLIENT_FOLDER, "views"));
 
 // Lets the API read JSON sent by the client
 app.use(express.json());
-// API routers: agendas and their activities
-app.use("/api", agendasRouter);
-app.use("/api", activitesRouter);
+// Reads the token cookie before any route, so every route knows the user
 app.use(cookieParser()).use(auth);
 
-// Web pages: everything else is served from the client folder
-app.use(express.static(CLIENT_FOLDER));
+// API routers: agendas and their activities (only for logged in users)
+app.use("/api", requireApiLogin);
+app.use("/api", agendasRouter);
+app.use("/api", activitesRouter);
 
 app.post("/login", function (request, response){
     // request.body is undefined when the client does not send JSON
@@ -89,10 +89,12 @@ function isFilled(value) {
     return typeof value === "string" && value.trim() !== "";
 }
 
+// Creates a signed token with the user id and name, valid 30 minutes
 function createJWT(user){
     return jwt.sign({id: user.id, username: user.username}, process.env.SECRET, {expiresIn: "30m"});
 }
 
+// Puts the user of a valid token in res.locals.user (stays undefined otherwise)
 function auth(req, res, next){
     try {
         const token = req.cookies.accessToken;
@@ -104,6 +106,7 @@ function auth(req, res, next){
     next();
 }
 
+// Pages: sends a visitor who is not logged in to the login page
 function requireLogin(req, res, next){
     if(res.locals.user === undefined){
         return res.redirect("/login");
@@ -111,6 +114,15 @@ function requireLogin(req, res, next){
     next();
 }
 
+// API: answers 401 to a visitor who is not logged in (no redirect, the client expects JSON)
+function requireApiLogin(req, res, next){
+    if(res.locals.user === undefined){
+        return res.status(401).json({erreur: "Non connecté"});
+    }
+    next();
+}
+
+// Pages: a logged in user does not need the login or register page
 function redirectIfLogin(req, res, next){
     if(res.locals.user !== undefined){
         return res.redirect("/");

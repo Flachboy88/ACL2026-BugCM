@@ -21,6 +21,13 @@ function toUtc(value) {
     return isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+// Agenda demandé s'il appartient à l'utilisateur connecté, undefined sinon
+function getAgendaOfUser(idAgenda, response) {
+    return database.prepare(
+        "SELECT id_agenda FROM agenda WHERE id_agenda = ? AND id_utilisateur = ?"
+    ).get(idAgenda, response.locals.user.id);
+}
+
 /**
  * Recupère les activitées de l'agenda
  */
@@ -29,6 +36,9 @@ router.get("/agendas/:idAgenda/activites", function (request, response) {
     const end = toUtc(request.query.end);
     if (start === null || end === null) {
         return response.status(400).json({ erreur: "Période invalide" });
+    }
+    if (getAgendaOfUser(request.params.idAgenda, response) === undefined) {
+        return response.status(404).json({ erreur: "Agenda introuvable" });
     }
     // Seulement les activités qui chevauchent la période affichée
     const rows = database.prepare(
@@ -55,8 +65,8 @@ router.post("/agendas/:idAgenda/activites", function (request, response) {
         return response.status(400).json({ erreur: "La fin doit être après le début" });
     }
     
-    // Test Existance d'un aganda 
-    const agenda = database.prepare("SELECT id_agenda FROM agenda WHERE id_agenda = ?").get(request.params.idAgenda);
+    // Test Existance d'un aganda (et qu'il appartient à l'utilisateur)
+    const agenda = getAgendaOfUser(request.params.idAgenda, response);
     if (agenda === undefined) {
         return response.status(404).json({ erreur: "Agenda introuvable" });
     }
@@ -75,7 +85,10 @@ router.post("/agendas/:idAgenda/activites", function (request, response) {
  * Delete une activité de la DB en fonction de id_activite
  */
 router.delete("/activites/:idActivite", function (request, response) {
-    const result = database.prepare("DELETE FROM activite WHERE id_activite = ?").run(request.params.idActivite);
+    // On ne supprime que si l'activité est dans un agenda de l'utilisateur connecté
+    const result = database.prepare(
+        "DELETE FROM activite WHERE id_activite = ? AND id_agenda IN (SELECT id_agenda FROM agenda WHERE id_utilisateur = ?)"
+    ).run(request.params.idActivite, response.locals.user.id);
     // Test de Changement -> 404 si rien n'a changé
     if (result.changes === 0) {
         return response.status(404).json({ erreur: "Activité introuvable" });
