@@ -1,3 +1,5 @@
+import { openCreateModal, openEditModal } from './activityModal.js';
+
 export function getScrollTime() {
   const h = Math.max(new Date().getHours() - 1, 0);
   return `${String(h).padStart(2, '0')}:00:00`;
@@ -28,70 +30,38 @@ function transformEvent(activite) {
 }
 
 /**
- * Agenda dans lequel on ajoute une activité : le premier agenda coché du panneau.
- * Provisoire, en attendant de choisir l'agenda dans une modale.
+ * Agendas cochés dans le panneau ({ id, nom }) : ceux qu'on peut choisir dans la fenêtre d'activité.
  */
-function getSelectedAgendaId() {
-  const checkbox = document.querySelector('#agenda_list .agenda input:checked');
-  return checkbox ? checkbox.closest('.agenda').id : null;
+function getCheckedAgendas() {
+  const agendas = [];
+  document.querySelectorAll('#agenda_list .agenda').forEach(div => {
+    if (div.querySelector('input').checked) {
+      agendas.push({ id: div.id, nom: div.querySelector('label').textContent });
+    }
+  });
+  return agendas;
 }
 
 /**
- * Gère la création d'une activité lors de la sélection d'un créneau horaire.
+ * Sélection d'un créneau : ouvre la fenêtre de création d'une activité.
  */
-async function handleSelect(info) {
+function handleSelect(info) {
   const calendar = info.view.calendar;
   calendar.unselect();
 
-  const idAgenda = getSelectedAgendaId();
-  if (idAgenda === null) {
+  const agendas = getCheckedAgendas();
+  if (agendas.length === 0) {
     alert("Créez ou cochez d'abord un agenda");
     return;
   }
-
-  const titre = prompt("Nom de l'activité :");
-  if (!titre) return; // Empeche les cas en cas de fermeture fenêtre ou de string null
-
-  // Enregistre l'activité dans l'agenda
-  const reponse = await fetch(`/api/agendas/${idAgenda}/activites`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ 
-      titre, 
-      debut: info.start.toISOString(), 
-      fin: info.end.toISOString() 
-    })
-  });
-
-  // Gestion d'erreur
-  if (!reponse.ok) {
-    const { erreur } = await reponse.json();
-    alert(erreur);
-    return;
-  }
-
-  // Appel de la vue
-  calendar.refetchEvents();
+  openCreateModal(calendar, info.start, info.end, agendas);
 }
 
 /**
- * Gère la suppression d'une activité au clic sur celle-ci.
+ * Clic sur une activité : ouvre la fenêtre de modification (avec le bouton Supprimer).
  */
-async function handleEventClick(info) {
-  const props = info.event.extendedProps;
-  let msg = `${info.event.title}`;
-  if (props.description) msg += `\n ${props.description}`;
-
-  if (!confirm(`${msg}\n\n Souhaitez-vous supprimer cette activité ?`)) return;
-
-  // Fetch de l'event pour le delete
-  const reponse = await fetch(`/api/activites/${info.event.id}`, { method: "DELETE" });
-
-  if (reponse.ok) {
-    info.event.remove();
-  } else {
-    alert("Suppression impossible");
-  }
+function handleEventClick(info) {
+  openEditModal(info.view.calendar, info.event, getCheckedAgendas());
 }
 
 /**
@@ -119,10 +89,11 @@ export function createCalendar(elementId) {
       right: 'timeGridDay,timeGridWeek,dayGridMonth,listWeek'
     },
 
-    editable: true,
+    // Glisser-déposer désactivé : il n'est pas encore enregistré (prévu au sprint suivant)
+    editable: false,
     selectable: true,
 
-    // Handlers des activitées ( creation, suppression, ...)
+    // Handlers des activitées (création, modification, suppression)
     // Les événements viennent des sources ajoutées par addAgendaToPanel (une par agenda)
     select: handleSelect,
     eventClick: handleEventClick,
