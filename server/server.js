@@ -1,3 +1,4 @@
+import "./setup_env.js";
 import path from "path";
 import express from "express";
 import runMigrations from "./migrations.js"
