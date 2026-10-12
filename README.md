@@ -34,6 +34,21 @@ Plusieurs clients peuvent utiliser l'application simultanément.
 
 Base de données, création des tables et dépannage : voir [docs/base-de-donnees.md](docs/base-de-donnees.md).
 
+Creation autolatique via script (setup_env.js) d'un fichier .env avec une clé secrète
+
+### Lancement mode dev
+
+```bash
+npm install && npm run dev
+```
+
+Permet de ne pas voir à relancé le serveur à chaque modification des fichiers observé par le module (/server).
+Module intégré à node 22. Pour les autres fichiers il suffit de recharger la page pour les rechargé.
+Si necessaire rajouter à la suite du premier watch un watch path, la ligne doit ressembler  ce qui suit :
+```bash
+"dev": "node --watch --watch-path=server --watch-path=DIRECTORY_TO_OBSERVE_CHANGE server/server.js"
+```
+
 ---
 
 ## Architecture
@@ -47,12 +62,19 @@ Un **serveur unique** (Express) assure deux rôles, sur des routes distinctes :
 
 ```
 .
-├── client/                 # Client Web : pages HTML, styles CSS, scripts JS
+├── client/                 
+│   ├── css                 # Fichier de style
+│   ├── views/               # Fichier ejs, contient les fichier html
+│   │   ├── partial         # Fichier de template en ejs (ex:header)
+│   │   └── ... .ejs
+│   └── js/                  # Script d'affichage directe
 ├── server/
 │   ├── server.js           # Point d'entrée : routes API + pages Web
 │   ├── database.js         # Connexion à la base SQLite
 │   ├── migrations.js       # Application des migrations au démarrage
-│   └── resetDatabase.js    # Effacement de la base locale (npm run db:reset)
+│   ├── resetDatabase.js    # Effacement de la base locale (npm run db:reset)
+│   ├── setup_env.js        # Mise en place d'une clé secrète
+│   └── route/              # Recrée le callendar de l'utilisateur connecté à partir de la DB
 ├── database/
 │   └── migrations/         # Fichiers SQL numérotés qui créent / modifient les tables
 ├── data/                   # Fichier de la base (agenda.db), créé au démarrage, pas dans Git
@@ -66,8 +88,8 @@ Un **serveur unique** (Express) assure deux rôles, sur des routes distinctes :
 | Partie | Choix |
 |---|---|
 | Serveur | Node.js + Express 5 |
-| Client | HTML, CSS et JavaScript, sans framework |
-| Affichage du calendrier | FullCalendar (en cours d'intégration) |
+| Client | HTML, CSS, JavaScript, EJS, sans framework |
+| Affichage du calendrier | FullCalendar |
 | Base de données | SQLite (bibliothèque `better-sqlite3`) |
 
 ### Persistance des données
@@ -131,9 +153,10 @@ Le suivi des tâches se fait dans le [GitHub Project](https://github.com/users/F
 
 À la fin de chaque sprint, la branche principale est à jour et porte un tag correspondant au sprint :
 
-| Tag | Contenu |
-|---|---|
-| `v1` | Sprint 0 |
-| `v2` | Sprint 1 |
-| ... | ... |
-| `release` | Version finale |
+| Tag | Contenu | semaine |
+|---|---|---|
+| `v1` | Sprint 0 | s40 -> s42 |
+| `v2` | Sprint 1 | s42 -> s45 |
+| `v3` | Sprint 2 | s45 -> s47 |
+| `v4` | Sprint 3 | s47 -> s50 |
+| `release` | Version finale | s50 |
