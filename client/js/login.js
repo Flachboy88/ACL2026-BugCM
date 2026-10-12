@@ -10,5 +10,8 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
   const data = await res.json();
   if(res.ok){
     window.location.href = data.path;
+  } else {
+    // Shows the server message (missing fields, wrong password...)
+    document.getElementById("login-erreur").textContent = data.erreur;
   }
 });

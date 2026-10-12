@@ -6,7 +6,7 @@
     <title>Inscription - Agenda BugCM</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
+<body class="register">
     
     <%- include('partials/header') %>
 
@@ -30,6 +30,7 @@
                     <label for="register-password2">Confirmer votre mot de passe</label>
                     <input id="register-password2" type="password" name="pwd2" placeholder="pwd" required autocomplete="new-password">
                 </div>
+                <p id="register-erreur" class="erreur"></p>
                 <input type="submit" value="S'inscrire" class="bouton">
             </form>
             <p class="switch">Déjà inscrit ? <a href="/login">Se connecter</a></p>

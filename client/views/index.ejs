@@ -30,6 +30,43 @@
         <div id="calendar"></div>
     </div>
 
+    <!-- Window to create or edit an activity (opened by activityModal.js) -->
+    <dialog id="activite_modal">
+        <form id="activite_form">
+            <h2 id="activite_modal_titre">Nouvelle activité</h2>
+            <div class="field">
+                <label for="activite_titre">Titre</label>
+                <input type="text" id="activite_titre" required>
+            </div>
+            <div class="field">
+                <label for="activite_debut">Début</label>
+                <input type="datetime-local" id="activite_debut" required>
+            </div>
+            <div class="field">
+                <label for="activite_fin">Fin</label>
+                <input type="datetime-local" id="activite_fin" required>
+            </div>
+            <div class="field">
+                <label for="activite_agenda">Agenda</label>
+                <select id="activite_agenda"></select>
+            </div>
+            <div class="field">
+                <label for="activite_lieu">Lieu</label>
+                <input type="text" id="activite_lieu">
+            </div>
+            <div class="field">
+                <label for="activite_description">Description</label>
+                <textarea id="activite_description" rows="3"></textarea>
+            </div>
+            <p id="activite_erreur" class="erreur"></p>
+            <div class="modal_boutons">
+                <button type="button" id="activite_supprimer" class="bouton_supprimer">Supprimer</button>
+                <button type="button" id="activite_annuler">Annuler</button>
+                <button type="submit" class="bouton_enregistrer">Enregistrer</button>
+            </div>
+        </form>
+    </dialog>
+
     <script type="module" src="js/main.js"></script>
 
 </body>
