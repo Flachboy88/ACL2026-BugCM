@@ -25,28 +25,33 @@ Prérequis : [Node.js](https://nodejs.org/) **22 ou plus**, en version LTS (avec
 npm install && npm start
 ```
 
-`npm start` crée ou met à jour la base de données (un fichier SQLite), puis lance le serveur sur le port **3000** :
+Au démarrage, `npm start` :
 
-- en local : http://localhost:3000
-- depuis une autre machine du réseau local : `http://<IP-de-la-machine-hôte>:3000`
+1. crée le fichier `.env` avec une clé secrète `SECRET` (utilisée pour signer les jetons de connexion) s'il n'existe pas encore (script `server/setup_env.js`) ;
+2. crée ou met à jour la base de données (un fichier SQLite) ;
+3. lance le serveur sur le port **3000** :
+   - en local : http://localhost:3000
+   - depuis une autre machine du réseau local : `http://<IP-de-la-machine-hôte>:3000`
 
 Plusieurs clients peuvent utiliser l'application simultanément.
 
+Le fichier `.env` n'est pas dans Git : chacun a le sien sur sa machine.
+
 Base de données, création des tables et dépannage : voir [docs/base-de-donnees.md](docs/base-de-donnees.md).
 
-Creation autolatique via script (setup_env.js) d'un fichier .env avec une clé secrète
-
-### Lancement mode dev
+### Lancement en mode développement
 
 ```bash
 npm install && npm run dev
 ```
 
-Permet de ne pas voir à relancé le serveur à chaque modification des fichiers observé par le module (/server).
-Module intégré à node 22. Pour les autres fichiers il suffit de recharger la page pour les rechargé.
-Si necessaire rajouter à la suite du premier watch un watch path, la ligne doit ressembler  ce qui suit :
+Le serveur redémarre tout seul quand on modifie un fichier du serveur (option `--watch` intégrée à Node.js 22, rien à installer).
+Pour les fichiers du client (`client/`), il suffit de recharger la page dans le navigateur.
+
+Pour surveiller aussi un autre dossier, on peut ajouter des `--watch-path` dans le script `dev` du `package.json`, par exemple :
+
 ```bash
-"dev": "node --watch --watch-path=server --watch-path=DIRECTORY_TO_OBSERVE_CHANGE server/server.js"
+"dev": "node --watch --watch-path=server --watch-path=DOSSIER_A_SURVEILLER server/server.js"
 ```
 
 ---
@@ -58,23 +63,22 @@ Un **serveur unique** (Express) assure deux rôles, sur des routes distinctes :
 | Rôle | Préfixe de route | Description |
 |---|---|---|
 | API | `/api/...` | Fournit les données et opérations de l'application |
-| Pages Web | `/` | Sert le client (HTML, CSS, JS) depuis le dossier `client/` |
+| Pages Web | `/` | Pages générées avec EJS depuis `client/views/`, plus les fichiers CSS et JS de `client/` |
 
 ```
 .
-├── client/                 
-│   ├── css                 # Fichier de style
-│   ├── views/               # Fichier ejs, contient les fichier html
-│   │   ├── partial         # Fichier de template en ejs (ex:header)
-│   │   └── ... .ejs
-│   └── js/                  # Script d'affichage directe
+├── client/
+│   ├── css/                # Feuille de style
+│   ├── js/                 # Scripts du navigateur (calendrier, fenêtres, connexion...)
+│   └── views/              # Pages EJS (index, login, register)
+│       └── partials/       # Morceaux de page réutilisés (ex : header)
 ├── server/
-│   ├── server.js           # Point d'entrée : routes API + pages Web
+│   ├── server.js           # Point d'entrée : connexion / inscription / déconnexion + pages Web
+│   ├── routes/             # Routes de l'API : agendas.js et activites.js
 │   ├── database.js         # Connexion à la base SQLite
 │   ├── migrations.js       # Application des migrations au démarrage
 │   ├── resetDatabase.js    # Effacement de la base locale (npm run db:reset)
-│   ├── setup_env.js        # Mise en place d'une clé secrète
-│   └── route/              # Recrée le callendar de l'utilisateur connecté à partir de la DB
+│   └── setup_env.js        # Création du fichier .env avec la clé secrète
 ├── database/
 │   └── migrations/         # Fichiers SQL numérotés qui créent / modifient les tables
 ├── data/                   # Fichier de la base (agenda.db), créé au démarrage, pas dans Git
@@ -104,10 +108,10 @@ Les tables sont créées et modifiées par des **migrations** (fichiers SQL num�
 
 ### Socle minimal
 
-- [ ] S'identifier / fermer sa session
-- [ ] Créer un agenda
-- [ ] Ajouter / supprimer / modifier un rendez-vous
-- [ ] Visualiser un nombre quelconque d'agendas simultanément
+- [x] Créer un compte, s'identifier / fermer sa session
+- [x] Créer un agenda
+- [x] Ajouter / supprimer / modifier un rendez-vous
+- [x] Visualiser un nombre quelconque d'agendas simultanément (vues jour, semaine, mois et liste)
 
 ### Fonctionnalités avancées
 
@@ -124,11 +128,40 @@ Les tables sont créées et modifiées par des **migrations** (fichiers SQL num�
 
 ## API
 
+Les données sont échangées en JSON. En cas d'erreur, la réponse contient `{ "erreur": "message" }`.
+
+### Connexion
+
+À la connexion ou à l'inscription, le serveur dépose un cookie `accessToken` (jeton JWT valable 30 minutes) qui identifie l'utilisateur.
+
 | Méthode | Route | Description |
 |---|---|---|
-| `GET` | `/api/status` | Indique que le serveur fonctionne |
+| `POST` | `/register` | Crée un compte (`userName`, `email`, `password`, `confirmPassword`) et connecte l'utilisateur |
+| `POST` | `/login` | Connecte l'utilisateur (`email`, `password`) |
+| `POST` | `/logout` | Ferme la session (efface le cookie) et redirige vers `/login` |
 
-> Les routes sont ajoutées à ce tableau au fur et à mesure de leur développement.
+### Agendas et activités
+
+Toutes les routes `/api/...` demandent d'être connecté : sinon elles répondent `401`. Chaque utilisateur ne voit et ne modifie que ses propres agendas.
+
+| Méthode | Route | Description |
+|---|---|---|
+| `GET` | `/api/agendas` | Liste les agendas de l'utilisateur connecté |
+| `POST` | `/api/agendas` | Crée un agenda (`nom`, `couleur` au format `#RRGGBB`, `description` facultative) |
+| `GET` | `/api/agendas/:idAgenda/activites?start=...&end=...` | Liste les activités de l'agenda qui chevauchent la période donnée |
+| `POST` | `/api/agendas/:idAgenda/activites` | Crée une activité (`titre`, `debut`, `fin`, `lieu` et `description` facultatifs) |
+| `PUT` | `/api/activites/:idActivite` | Modifie une activité (mêmes champs, sans changer d'agenda) |
+| `DELETE` | `/api/activites/:idActivite` | Supprime une activité |
+
+### Pages Web
+
+| Route | Page |
+|---|---|
+| `/` | Le calendrier (redirige vers `/login` si on n'est pas connecté) |
+| `/login` | Connexion (redirige vers `/` si on est déjà connecté) |
+| `/register` | Inscription (redirige vers `/` si on est déjà connecté) |
+
+> Les routes sont ajoutées à ces tableaux au fur et à mesure de leur développement.
 
 ---
 
@@ -136,10 +169,9 @@ Les tables sont créées et modifiées par des **migrations** (fichiers SQL num�
 
 Le projet est organisé en sprints de 2 semaines. Pour chaque sprint, un dossier `sprints/sprintN/` contient :
 
-- `backlog-sprint.md` — backlog du sprint courant ;
-- `conception.md` — conception envisagée pour le sprint courant ;
-- `revue.md` — revue du sprint précédent (fonctionnalités réalisées et validées, ou non) ;
-- `retrospective.md` — rétrospective du sprint précédent (ce qui a bien ou mal fonctionné, décisions pour le sprint courant).
+- `backlog-sprint.md` — backlog du sprint ;
+- `conception.md` — conception envisagée pour le sprint ;
+- `sprintReview` — revue du sprint (fonctionnalités réalisées et validées, ou non) et rétrospective (ce qui a bien ou mal fonctionné, décisions pour le sprint suivant).
 
 Le suivi des tâches se fait dans le [GitHub Project](https://github.com/users/Flachboy88/projects/2) de l'équipe : Backlog → In progress → Testing → In review → Done.
 
@@ -153,7 +185,7 @@ Le suivi des tâches se fait dans le [GitHub Project](https://github.com/users/F
 
 À la fin de chaque sprint, la branche principale est à jour et porte un tag correspondant au sprint :
 
-| Tag | Contenu | semaine |
+| Tag | Contenu | Semaines |
 |---|---|---|
 | `v1` | Sprint 0 | s40 -> s42 |
 | `v2` | Sprint 1 | s42 -> s45 |
