@@ -171,7 +171,7 @@ Le projet est organisé en sprints de 2 semaines. Pour chaque sprint, un dossier
 
 - `backlog-sprint.md` — backlog du sprint ;
 - `conception.md` — conception envisagée pour le sprint ;
-- `sprintReview` — revue du sprint (fonctionnalités réalisées et validées, ou non) et rétrospective (ce qui a bien ou mal fonctionné, décisions pour le sprint suivant).
+- `sprint-review.md` — revue du sprint (fonctionnalités réalisées et validées, ou non) et rétrospective (ce qui a bien ou mal fonctionné, décisions pour le sprint suivant).
 
 Le suivi des tâches se fait dans le [GitHub Project](https://github.com/users/Flachboy88/projects/2) de l'équipe : Backlog → In progress → Testing → In review → Done.
 
