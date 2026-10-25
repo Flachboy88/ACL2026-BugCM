@@ -12,7 +12,7 @@ after(function () {
 
 describe("GET /api/agendas", function () {
     test("renvoie une liste vide pour un nouvel utilisateur", async function () {
-        // À changer avec la story « Mon agenda créé à l'inscription » : il y aura un agenda
+        // Échouera avec l'issue #62 (« Mon agenda » créé à l'inscription) : il faudra attendre ["Mon agenda"]
         const cookie = await creerUtilisateur(url);
 
         const response = await requete(url, "/api/agendas", { cookie: cookie });
