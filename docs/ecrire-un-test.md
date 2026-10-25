@@ -1,118 +1,80 @@
 # Écrire un test
 
-Les tests vérifient automatiquement que les routes répondent ce qu'elles doivent répondre.
-Ils utilisent `node:test` et `node:assert`, intégrés à Node.js 22 : rien à installer.
+On utilise `node:test` et `node:assert`, intégrés à Node.js 22 : rien à installer.
+Une story arrive avec ses tests, et `npm test` doit passer avant d'ouvrir la PR.
 
-Règle de l'équipe : **une story arrive avec ses tests**, et `npm test` passe avant d'ouvrir la PR.
-
----
-
-## 1. Lancer les tests
+## Lancer les tests
 
 ```bash
 npm test
 ```
 
-Pour un seul fichier, ou seulement les tests dont le nom contient un mot :
+Un seul fichier, ou seulement les tests dont le nom contient un mot :
 
 ```bash
 node --import ./test/setup.js --test test/agendas.test.js
 node --import ./test/setup.js --test --test-name-pattern="couleur" "test/**/*.test.js"
 ```
 
-Chaque test affiche `✔` (réussi) ou `✖` (échoué). En cas d'échec, Node affiche la valeur attendue et la valeur reçue.
+En cas d'échec, Node affiche la valeur attendue et la valeur reçue.
 
----
-
-## 2. Où sont les tests
+## Organisation
 
 ```
 test/
-├── setup.js            # Chargé avant chaque fichier : base en mémoire + secret des jetons
-├── helpers.js          # Outils partagés : démarrer l'app, envoyer une requête, créer un utilisateur
-├── auth.test.js        # Inscription, connexion, déconnexion, accès aux pages
-├── agendas.test.js     # Routes /api/agendas
-└── activites.test.js   # Routes des activités
+├── setup.js            # chargé avant chaque fichier : base en mémoire, secret des jetons
+├── helpers.js          # démarrer l'app, envoyer une requête, créer un utilisateur / un agenda
+├── auth.test.js        # inscription, connexion, déconnexion, accès aux pages
+├── agendas.test.js     # /api/agendas
+└── activites.test.js   # activités
 ```
 
-`npm test` lance tous les fichiers `test/**/*.test.js`. Pour une nouvelle route, on ajoute ses tests dans le fichier de son groupe, ou dans un nouveau fichier `xxx.test.js`.
+`server/app.js` construit l'app sans la démarrer (c'est `server/server.js` qui la démarre pour `npm start`).
+Chaque fichier de test démarre donc sa propre copie de l'app sur un port libre, avec une base en mémoire vide.
+`data/agenda.db` n'est jamais touchée.
 
-**Comment ça marche, en bref :**
+Pour une nouvelle route, on ajoute ses tests dans le fichier de son groupe, ou dans un nouveau fichier `xxx.test.js`.
 
-- `server/app.js` construit l'application Express **sans la démarrer**. C'est `server/server.js` qui la démarre pour `npm start`.
-- Chaque fichier de test démarre sa propre copie de l'app sur un port libre (`demarrerServeur()`), puis l'arrête à la fin.
-- La base est en mémoire (`DATABASE_FILE=":memory:"`, posé dans `setup.js`) : elle est vide au début de chaque fichier et disparaît à la fin. Votre `data/agenda.db` n'est jamais touchée.
+## Un test
 
----
-
-## 3. Anatomie d'un test
-
-Un test fait toujours trois choses : **préparer** les données, **agir** (envoyer la requête), **vérifier** la réponse.
+Un test prépare les données, envoie la requête, puis vérifie la réponse :
 
 ```js
 test("refuse une couleur qui n'est pas au format #RRGGBB (400)", async function () {
-    // Préparer : un utilisateur connecté
     const cookie = await creerUtilisateur(url);
 
-    // Agir : la requête à tester
     const response = await requete(url, "/api/agendas", {
         method: "POST",
         cookie: cookie,
         body: { nom: "Travail", couleur: "rouge" }
     });
 
-    // Vérifier : le code HTTP et le JSON renvoyé
     assert.equal(response.status, 400);
     assert.deepEqual(await response.json(), { erreur: "Couleur invalide (format #RRGGBB)" });
 });
 ```
 
-Le nom du test dit ce qui est attendu, en français, comme une phrase : « refuse… », « crée… », « répond 404… ».
+Le nom du test dit ce qui est attendu : « refuse… », « crée… », « répond 404… ».
 
----
+Les fonctions utiles :
 
-## 4. Les outils
+- `test`, `describe` (regroupe les tests d'une route), `before` / `after` (avant / après le groupe)
+- `assert.equal(a, b)` pour un nombre ou un texte, `assert.deepEqual(a, b)` pour un objet ou un tableau, `assert.ok(x)` si `x` doit être vrai
+- dans `helpers.js` :
+  - `requete(url, chemin, { method, body, cookie })` : `body` est envoyé en JSON. Les redirections ne sont pas suivies, on vérifie `302` et `response.headers.get("location")`.
+  - `creerUtilisateur(url)` : nouveau compte à chaque appel, renvoie son cookie de connexion.
+  - `creerAgenda(url, cookie, nom)` : renvoie l'agenda créé.
+  - `lireCookie(response)` : cookie `accessToken=…` posé par la réponse.
 
-### `node:test`
-
-| Fonction | Rôle |
-|---|---|
-| `test("nom", fn)` | Un test |
-| `describe("nom", fn)` | Regroupe des tests (par exemple tous ceux d'une route) |
-| `before(fn)` / `after(fn)` | Exécuté une fois avant / après les tests du groupe (ou du fichier) |
-
-### `node:assert/strict`
-
-| Vérification | Réussit si… |
-|---|---|
-| `assert.equal(a, b)` | `a === b` (nombres, textes) |
-| `assert.deepEqual(a, b)` | `a` et `b` ont le même contenu (objets, tableaux) |
-| `assert.ok(valeur)` | `valeur` est vraie (non vide, non `undefined`…) |
-| `assert.notEqual(a, b)` | `a !== b` |
-
-### `test/helpers.js`
-
-| Fonction | Rôle |
-|---|---|
-| `demarrerServeur()` | Démarre l'app sur un port libre, renvoie `{ url, arreter }` |
-| `requete(url, chemin, { method, body, cookie })` | Envoie une requête ; `body` est envoyé en JSON. Les redirections ne sont pas suivies : on vérifie `302` et `response.headers.get("location")` |
-| `creerUtilisateur(url)` | Inscrit un nouvel utilisateur (email unique) et renvoie son cookie de connexion |
-| `creerAgenda(url, cookie, nom)` | Crée un agenda pour cet utilisateur et le renvoie |
-| `lireCookie(response)` | Cookie `accessToken=…` posé par la réponse (`undefined` s'il n'y en a pas) |
-
-Si un besoin revient dans plusieurs fichiers (créer une activité, par exemple), on l'ajoute dans `helpers.js`.
-
----
-
-## 5. Modèle d'un nouveau fichier de test
+## Nouveau fichier de test
 
 ```js
-// Tests de ... (dire quelles routes)
+// Tests de PUT /api/agendas/:idAgenda
 import { describe, test, after } from "node:test";
 import assert from "node:assert/strict";
 import { demarrerServeur, requete, creerUtilisateur } from "./helpers.js";
 
-// Une copie de l'app, démarrée pour ce fichier sur un port libre
+// Serveur de test pour ce fichier, sur un port libre
 const { url, arreter } = await demarrerServeur();
 
 after(function () {
@@ -124,35 +86,22 @@ describe("PUT /api/agendas/:idAgenda", function () {
         const cookie = await creerUtilisateur(url);
         // ...
     });
-
-    test("répond 404 pour l'agenda d'un autre utilisateur", async function () {
-        // ...
-    });
 });
 ```
 
-Le serveur est démarré en haut du fichier (pas dans un `before`) : quand on filtre avec `--test-name-pattern`, Node saute les `before` des fichiers sans test choisi mais exécute quand même leur `after`.
+Le serveur est démarré en haut du fichier et pas dans un `before` : avec `--test-name-pattern`, Node saute les `before` d'un fichier dont aucun test n'est choisi, mais lance quand même son `after`.
 
----
+## Quoi tester
 
-## 6. Quoi tester pour une route
+Pour chaque route, au moins le cas normal (code `200` / `201` / `204` et JSON renvoyé) et un cas d'erreur (`400`, `404`).
+Selon la route, aussi :
 
-Au minimum, pour chaque route :
+- sans être connecté : `401` sur `/api` ;
+- avec les données d'un autre utilisateur : créer deux utilisateurs, vérifier que le second ne peut ni voir, ni modifier, ni supprimer ce qui est au premier.
 
-- **le cas normal** : le bon code (`200`, `201`, `204`) et le JSON renvoyé ;
-- **au moins un cas d'erreur** : champ manquant ou invalide (`400`), élément introuvable (`404`).
+Quelques règles :
 
-Et selon la route :
-
-- **sans être connecté** : une route `/api` répond `401` ;
-- **les données d'un autre utilisateur** : on crée deux utilisateurs et on vérifie que le second ne peut ni voir, ni modifier, ni supprimer ce qui appartient au premier (`404`, et la donnée n'a pas changé).
-
----
-
-## 7. Bonnes pratiques
-
-- **Des tests indépendants** : chaque test crée ce dont il a besoin (`creerUtilisateur` donne un compte neuf à chaque appel). Un test ne doit pas dépendre d'un autre test, ni de l'ordre d'exécution.
-- **Un test = un comportement** : si le nom du test contient « et », c'est souvent deux tests.
-- **Vérifier le contenu, pas seulement le code HTTP** : le message d'erreur, les champs renvoyés.
-- **Voir le test échouer au moins une fois** : on casse volontairement le code (par exemple `201` → `200`) et on vérifie que le test passe au rouge. Un test qui ne peut pas échouer ne sert à rien.
-- **Modifier un test, c'est modifier une règle** : si un test casse après votre changement, demandez-vous d'abord si c'est le code ou le test qui a raison, et dites-le dans la PR.
+- chaque test crée ce dont il a besoin, sans dépendre d'un autre test ;
+- vérifier aussi le message d'erreur et les champs renvoyés, pas seulement le code HTTP ;
+- voir le test échouer une fois (par exemple en changeant `201` en `200` dans la route) pour être sûr qu'il teste quelque chose ;
+- si un test casse après un changement, se demander qui a raison du code ou du test, et le dire dans la PR.

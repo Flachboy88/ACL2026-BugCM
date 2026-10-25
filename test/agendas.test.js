@@ -3,7 +3,7 @@ import { describe, test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { demarrerServeur, requete, creerUtilisateur, creerAgenda } from "./helpers.js";
 
-// Une copie de l'app, démarrée pour ce fichier sur un port libre
+// Serveur de test pour ce fichier, sur un port libre
 const { url, arreter } = await demarrerServeur();
 
 after(function () {
