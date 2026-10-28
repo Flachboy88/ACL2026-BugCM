@@ -6,7 +6,7 @@ const router = express.Router();
 // Format #RRGGBB, comme dans conception.md (c'est aussi ce que donne <input type="color">)
 const COULEUR_VALIDE = /^#[0-9a-fA-F]{6}$/;
 
-// Id de l'utilisateur connecté, lu dans le token par le middleware auth de server.js
+// Id de l'utilisateur connecté, lu dans le token par le middleware auth de app.js
 function getIdUtilisateur(response) {
     return response.locals.user.id;
 }

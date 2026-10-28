@@ -4,7 +4,8 @@ import Database from "better-sqlite3";
 
 
 const DATA_FOLDER = path.join(import.meta.dirname, "..", "data");
-const DATABASE_FILE = path.join(DATA_FOLDER, "agenda.db");
+// DATABASE_FILE can choose another file; the tests use ":memory:" (a new empty database, never saved)
+const DATABASE_FILE = process.env.DATABASE_FILE ?? path.join(DATA_FOLDER, "agenda.db");
 
 // The data folder is not in Git, so it may not exist yet
 fs.mkdirSync(DATA_FOLDER, { recursive: true });

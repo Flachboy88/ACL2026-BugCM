@@ -54,6 +54,15 @@ Pour surveiller aussi un autre dossier, on peut ajouter des `--watch-path` dans 
 "dev": "node --watch --watch-path=server --watch-path=DOSSIER_A_SURVEILLER server/server.js"
 ```
 
+### Tests
+
+```bash
+npm test
+```
+
+Les tests utilisent `node:test` (intégré à Node.js, rien à installer) et une base en mémoire : la base locale `data/agenda.db` n'est pas touchée.
+Pour écrire un test : voir [docs/ecrire-un-test.md](docs/ecrire-un-test.md).
+
 ---
 
 ## Architecture
@@ -73,7 +82,8 @@ Un **serveur unique** (Express) assure deux rôles, sur des routes distinctes :
 │   └── views/              # Pages EJS (index, login, register)
 │       └── partials/       # Morceaux de page réutilisés (ex : header)
 ├── server/
-│   ├── server.js           # Point d'entrée : connexion / inscription / déconnexion + pages Web
+│   ├── server.js           # Point d'entrée : prépare la base puis démarre le serveur (port 3000)
+│   ├── app.js              # Application Express : connexion / inscription / déconnexion + pages Web, sans la démarrer
 │   ├── routes/             # Routes de l'API : agendas.js et activites.js
 │   ├── database.js         # Connexion à la base SQLite
 │   ├── migrations.js       # Application des migrations au démarrage
@@ -82,6 +92,7 @@ Un **serveur unique** (Express) assure deux rôles, sur des routes distinctes :
 ├── database/
 │   └── migrations/         # Fichiers SQL numérotés qui créent / modifient les tables
 ├── data/                   # Fichier de la base (agenda.db), créé au démarrage, pas dans Git
+├── test/                   # Tests automatisés (npm test), un fichier *.test.js par groupe de routes
 ├── docs/                   # Documentation de l'équipe
 ├── sprints/                # Documents Scrum, un dossier par sprint
 └── package.json
