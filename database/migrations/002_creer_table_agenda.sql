@@ -1,5 +1,5 @@
 -- A set of activities owned by one user (for example "Cours" or "Sport")
-CREATE TABLE agenda (
+CREATE TABLE IF NOT EXISTS agenda (
     id_agenda INTEGER PRIMARY KEY AUTOINCREMENT,
     nom TEXT NOT NULL,
     couleur TEXT NOT NULL,

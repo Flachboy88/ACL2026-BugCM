@@ -1,5 +1,5 @@
 -- A person who has an account (email + password)
-CREATE TABLE utilisateur (
+CREATE TABLE IF NOT EXISTS utilisateur (
     id_utilisateur INTEGER PRIMARY KEY AUTOINCREMENT,
     nom TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
