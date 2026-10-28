@@ -36,7 +36,14 @@ const testUsers = [
     { nom: 'Romaric', email: 'TestRomaric@gmail.com', passwordHash: 'TesRomaric' },
     { nom: 'Nyar', email: 'TestNyar@gmail.com', passwordHash: 'TestNyar' },
     { nom: 'Martin', email: 'TestMartin@gmail.com', passwordHash: 'TestMartin' },
-    { nom: 'Matteo', email: 'TestMatteo@gmail.com', passwordHash: 'TestMatteo' }
+    { nom: 'Matteo', email: 'TestMatteo@gmail.com', passwordHash: 'TestMatteo' },
+    { nom: 'User0', email: 'TestUser0@gmail.com', passwordHash: 'TestUser0' },
+    { nom: 'User1', email: 'TestUser1@gmail.com', passwordHash: 'TestUser1' },
+    { nom: 'User2', email: 'TestUser2@gmail.com', passwordHash: 'TestUser2' },
+    { nom: 'User3', email: 'TestUser3@gmail.com', passwordHash: 'TestUser3' },
+    { nom: 'User4', email: 'TestUser4@gmail.com', passwordHash: 'TestUser4' },
+    { nom: 'User5', email: 'TestUser5@gmail.com', passwordHash: 'TestUser5' },
+
 ];
 
 const insertData = db.prepare("INSERT OR IGNORE INTO utilisateur(nom, email, mot_de_passe_hash) VALUES(?, ?, ?)");
@@ -51,7 +58,7 @@ const getRandomHexColor = () => {
 
 
 testUsers.forEach(user => { 
-    
+
     insertData.run(user.nom, user.email, user.passwordHash);
     console.log("Création sur : " + user.nom);
     const userRow = GetterIdUtilisateur.get(user.nom, user.email, user.passwordHash);
