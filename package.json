@@ -8,7 +8,8 @@
     "start": "node server/server.js",
     "dev": "node --watch server/server.js",
     "test": "node --import ./test/setup.js --test \"test/**/*.test.js\"",
-    "db:reset": "node server/resetDatabase.js"
+    "db:reset": "node server/resetDatabase.js", 
+    "init" : "node server/initialization.js"
   },
   "engines": {
     "node": ">=22"
