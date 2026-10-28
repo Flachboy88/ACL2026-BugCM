@@ -1,3 +1,7 @@
+/* ==========================================================================
+   VARIABLES & RESET
+   ========================================================================== */
+
 :root {
     --bg: #f5f7fa;
     --surface: #fff;
@@ -8,11 +12,11 @@
     --page-padding: 16px;
 }
 
+/* Mobile breakpoint used below: 768px (keep in sync with `mobile` in calendar.js) */
+
 * {
     box-sizing: border-box;
 }
-
-
 
 body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -23,77 +27,19 @@ body {
     height: 100dvh;
     display: flex;
     flex-direction: column;
+    padding-top: 0px;
 }
 
-#header{
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: center;
-    margin-bottom: 25px;
+@media (max-width: 768px) {
+    body {
+        padding: 0px;
+    }
 }
 
-#header h1{
-    grid-column: 2;
-}
 
-#header p{
-    grid-column: 3;
-    justify-self: end;
-    margin: 0;
-    font-family: "Courier New", Consolas, monospace;
-    font-size: 14px;
-}
-
-.bouton_deconnexion{
-    width: 100%;
-    border-radius: 8px;
-    background-color: var(--primary);
-    color: white;
-    padding: 12px 20px;
-    font-size: 16px;
-    max-width: 200px;
-    min-width: 150px;
-    border: none;
-    transition: background-color .2s;
-    justify-self: end;
-    margin-right: 15px;
-    flex-shrink: 0;
-}
-
-.bouton_deconnexion:hover{
-    background-color: var(--primary-hover);
-}
-
-.login .bouton_deconnexion, .register .bouton_deconnexion{
-    display: none;
-}
-
-#auth_container{
-    animation: apparition 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-    background: var(--surface);
-    max-width: 960px;
-    margin: 32px auto 0;
-    display: flex; 
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 0px;
-    justify-content: center;
-    padding: 32px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 8px 24px rgba(0, 0, 0, .06);
-    border-radius: 12px;
-}
-
-.auth {
-    flex: 1;
-    min-width: 300px;
-    padding: 16px 40px;
-}
-
-.auth h2 {
-    margin: 0 0 24px;
-    font-size: 22px;
-}
+/* ==========================================================================
+   SHARED COMPONENTS (form fields, buttons, utilities)
+   ========================================================================== */
 
 input {
     width: 100%;
@@ -115,7 +61,7 @@ label {
     display: block;
     margin-bottom: 6px;
     font-size: 14px;
-    font-weight: 600px;
+    font-weight: 600;
 }
 
 .field {
@@ -128,14 +74,13 @@ label {
     font-size: 14px;
 }
 
-
 .bouton {
     width: 100%;
     background-color: var(--primary);
     color: white;
     padding: 12px 20px;
     font-size: 16px;
-    font-weight: 600px;
+    font-weight: 600;
     border: none;
     cursor: pointer;
     transition: background-color .2s;
@@ -145,77 +90,47 @@ label {
     background-color: var(--primary-hover);
 }
 
-
-#containter{    
-    display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
-    gap: 24px;
-    flex: 1;
-    min-height: 0;
+/* Hidden on screen but still read by screen readers */
+.sr-only {
+    position: absolute;     /* 1. out of the flow: takes no space in the layout */
+    width: 1px;             /* 2. shrunk to 1x1 px... */
+    height: 1px;            /*    ...not 0, which some screen readers ignore */
+    overflow: hidden;       /* 3. text overflowing this pixel is not drawn */
+    clip-path: inset(50%);  /* 4. clips 50% from each edge: nothing is left */
+    white-space: nowrap;    /* 5. keeps the text on one line, otherwise some readers
+                                  read it word by word because of line breaks */
 }
 
-#calendar {
-    min-height: 0;
-    grid-column: 2;
+
+/* ==========================================================================
+   AUTH PAGES (login / register)
+   ========================================================================== */
+
+#auth_container {
+    animation: apparition 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
     background: var(--surface);
-    padding: 16px;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
-}
-
-#agenda_panel{
-    grid-column: 1;
-    background: var(--surface);
-    padding: 16px;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
-    align-self: start;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-}
-
-#agenda_panel > * {
-    width: 100%;
-    margin: 0;
-}
-
-#agenda_panel h2 {
-    text-align: center;
-}
-
-#agenda_list{
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.agenda{
-    padding: 4px;
-    padding-left: 8px;
-    border-radius: 25px;
+    max-width: 960px;
+    margin: 32px auto 0;
     display: flex;
     flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    transition: background-color .2s;
-    cursor: pointer;
-    user-select: none;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0px;
+    justify-content: center;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 8px 24px rgba(0, 0, 0, .06);
+    border-radius: 12px;
 }
 
-.agenda:hover{
-    background-color: color-mix(in srgb, var(--agenda-color) 15%, white);    
+.auth {
+    flex: 1;
+    min-width: 300px;
+    padding: 16px 40px;
 }
 
-.agenda input{
-    width: auto;
-    padding: 0;
-}
-
-.agenda label{
-    margin: 0;
+.auth h2 {
+    margin: 0 0 24px;
+    font-size: 22px;
 }
 
 @keyframes apparition {
@@ -229,7 +144,447 @@ label {
     }
 }
 
-/* Window to create or edit an activity */
+
+/* ==========================================================================
+   HEADER (burger, site title, logout)
+   ========================================================================== */
+
+#header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+}
+
+#header h1 {
+    grid-column: 2;
+}
+
+#header p {
+    grid-column: 3;
+    justify-self: end;
+    margin: 0;
+    font-family: "Courier New", Consolas, monospace;
+    font-size: 14px;
+}
+
+/* --- Logout button --- */
+.bouton_deconnexion {
+    width: 100%;
+    border-radius: 8px;
+    background-color: var(--primary);
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    max-width: 200px;
+    min-width: 150px;
+    border: none;
+    transition: background-color .2s;
+    justify-self: end;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.bouton_deconnexion:hover {
+    background-color: var(--primary-hover);
+}
+
+.login .bouton_deconnexion,
+.register .bouton_deconnexion {
+    display: none;
+}
+
+/* --- Burger button (turns into a cross when the panel is open) --- */
+#burger {
+    background: none;
+    border: none;
+    color: var(--text);
+    width: 44px;
+    height: 44px;            /* large enough touch target */
+    padding: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login #burger,
+.register #burger {
+    display: none;
+}
+
+#burger .trait {
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    transform-box: view-box;
+    transform-origin: center;
+    transition: transform .3s ease, opacity .2s ease;
+}
+
+#burger[aria-expanded="true"] .haut   { transform: rotate(45deg)  translateY(6px); }
+#burger[aria-expanded="true"] .milieu { opacity: 0; }
+#burger[aria-expanded="true"] .bas    { transform: rotate(-45deg) translateY(-6px); }
+
+@media (max-width: 768px) {
+    .bouton_deconnexion {
+        display: none;
+    }
+
+    #burger {
+        z-index: 10000;
+    }
+}
+
+
+/* ==========================================================================
+   MAIN LAYOUT (side panel column + calendar column)
+   ========================================================================== */
+
+#container {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 24px;
+    flex: 1;
+    min-height: 0;
+    transition: grid-template-columns .3s ease, gap .3s ease;
+}
+
+#container.reduce {
+    grid-template-columns: 0px minmax(0, 1fr);
+    gap: 0;
+}
+
+@media (max-width: 768px) {
+    /* The panel floats over the calendar: its column stays empty */
+    #container {
+        grid-template-columns: 0px minmax(0, 1fr);
+        gap: 0;
+    }
+}
+
+
+/* ==========================================================================
+   SIDE PANEL (view choice, agenda list, new agenda form)
+   ========================================================================== */
+
+#agenda_panel {
+    grid-column: 1;
+    padding: 16px;
+    border-radius: 12px;
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    transition: opacity .2s ease, visibility .3s;
+}
+
+#container.reduce > #agenda_panel {
+    opacity: 0;
+    visibility: hidden;
+}
+
+#agenda_panel > * {
+    width: 100%;
+    margin: 0;
+}
+
+#agenda_panel h2 {
+    text-align: center;
+}
+
+/* --- View choice (radio buttons) --- */
+#choix_vue {
+    border: none;
+    padding: 0;
+}
+
+/* Highlights the selected view */
+#choix_vue label:has(input:checked) {
+    background: color-mix(in srgb, var(--primary) 12%, white);
+    font-weight: 600;
+}
+
+/* --- Agenda list --- */
+#agenda_list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Rows of the agenda list and of the view choice share the same look */
+.agenda,
+#choix_vue label {
+    min-height: 44px;        /* recommended touch target height */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 0 12px;
+    border-radius: 25px;
+    cursor: pointer;
+}
+
+.agenda {
+    transition: background-color .2s;
+    user-select: none;
+}
+
+.agenda:hover {
+    background-color: color-mix(in srgb, var(--agenda-color) 15%, white);
+}
+
+.agenda label {
+    margin: 0;
+}
+
+.agenda input,
+#choix_vue input {
+    width: 18px;             /* slightly bigger box, easier to hit */
+    height: 18px;
+    padding: 0;              /* cancels the global input padding */
+    flex-shrink: 0;
+}
+
+/* --- New agenda form --- */
+#agenda_form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ligne_form {
+    display: flex;
+    gap: 8px;
+}
+
+/* Square colour swatch next to the text field */
+#agenda_couleur {
+    flex: 0 0 46px;          /* neither grows nor shrinks: fixed 46px */
+    height: 46px;            /* same height as the text field */
+    padding: 4px;
+    cursor: pointer;
+}
+
+/* Inner swatch: each browser has its own pseudo-element */
+#agenda_couleur::-webkit-color-swatch-wrapper { padding: 0; }
+#agenda_couleur::-webkit-color-swatch { border: none; border-radius: 4px; }
+#agenda_couleur::-moz-color-swatch    { border: none; border-radius: 4px; }
+
+#agenda_form .bouton {
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    /* The panel becomes a drawer sliding in from the left */
+    #agenda_panel {
+        position: fixed;
+        z-index: 2;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: min(80vw, 300px);
+        border-radius: 0 12px 12px 0;
+        overflow-y: auto;
+        background: var(--surface);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+        align-self: stretch;
+        transition: transform .25s ease, visibility .25s;
+    }
+
+    #container.reduce > #agenda_panel {
+        transform: translateX(-100%);
+        opacity: 1;              /* slide only, no fade */
+    }
+}
+
+
+/* ==========================================================================
+   CALENDAR AREA (navigation bar + FullCalendar)
+   ========================================================================== */
+
+#calendar_container {
+    display: flex;
+    flex-direction: column;
+    grid-column: 2;
+    background: var(--surface);
+    padding: 16px;
+    border-radius: 30px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+}
+
+/* --- Navigation bar (prev / today / next + month) --- */
+#calendar_header {
+    display: inline-flex;
+    gap: 20px;
+    align-items: center;
+}
+
+#calendar_button {
+    display: flex;
+    gap: 8px;
+}
+
+#calendar_button button {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color .2s;
+    height: 44px;            /* same height for the 3 buttons, large enough touch target */
+    padding: 0 20px;
+    display: inline-flex;    /* centres the SVG vertically */
+    align-items: center;
+    justify-content: center;
+}
+
+#calendar_button #prev,
+#calendar_button #next {
+    width: 44px;             /* square buttons for the chevrons */
+    padding: 0;
+}
+
+#calendar_button button:hover {
+    background-color: var(--primary-hover);
+}
+
+#calendar_button button:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, .4);   /* visible when navigating with the keyboard */
+    outline-offset: 2px;
+}
+
+#calendar_button svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+#calendar_button svg .point {
+    fill: currentColor;
+    stroke: none;
+}
+
+#today svg {
+    display: none;           /* desktop: text only */
+}
+
+/* --- FullCalendar --- */
+#calendar {
+    flex: 1;
+    min-height: 0;
+}
+
+.fc-col-header-cell-cushion {
+    text-transform: capitalize;
+}
+
+/* Day view has a single column: highlighting today is useless */
+.fc-timeGridDay-view {
+    --fc-today-bg-color: transparent;
+}
+
+@media (max-width: 768px) {
+    #calendar_container {
+        isolation: isolate;      /* keeps FullCalendar's z-index values inside this box */
+        border-radius: 0px;
+    }
+
+    /* "Today" button: icon only, square like the chevrons */
+    #calendar_button #today {   /* (2,0,0) beats #calendar_button button (1,0,1) */
+        width: 44px;
+        padding: 0;
+    }
+
+    #today svg {
+        display: block;
+    }
+
+    /* Hides the text on screen but keeps it for screen readers */
+    #today .texte {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}
+
+
+/* ==========================================================================
+   FLOATING "ADD ACTIVITY" BUTTON (mobile only)
+   ========================================================================== */
+
+#ajout_activite {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    #ajout_activite {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        right: 20px;
+        bottom: max(20px, env(safe-area-inset-bottom));
+        z-index: 1;              /* above the calendar; the overlay, placed after it in the HTML, covers it */
+        width: 56px;
+        height: 56px;
+        border: none;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
+        cursor: pointer;
+    }
+
+    #ajout_activite svg {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+    }
+}
+
+
+/* ==========================================================================
+   OVERLAY (mobile only, dims the page while the drawer is open)
+   ========================================================================== */
+
+#overlay {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    #overlay {
+        display: block;
+        position: fixed;
+        inset: 0;                /* inset: 0 = top, right, bottom and left set to 0 */
+        z-index: 1;
+        background: rgba(0, 0, 0, .4);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .25s, visibility .25s;
+    }
+
+    /* Menu open = container WITHOUT .reduce */
+    #container:not(.reduce) ~ #overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+
+/* ==========================================================================
+   ACTIVITY MODAL (create / edit an activity)
+   ========================================================================== */
+
 #activite_modal {
     width: 420px;
     max-width: calc(100vw - 32px);
@@ -293,4 +648,15 @@ label {
 
 .modal_boutons .bouton_supprimer:hover {
     background-color: #b91c1c;
+}
+
+
+/* ==========================================================================
+   ACCESSIBILITY (reduced motion)
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    #burger .trait {
+        transition: none;
+    }
 }

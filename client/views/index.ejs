@@ -3,32 +3,82 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Agenda BugCM</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- FullCalendar Scheduler (Premium), used by the current calendar.js -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.11/index.global.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.11/index.global.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales/fr.global.min.js"></script>
 </head>
 <body>
     
     <%- include('partials/header') %>
 
-    <div id="containter">
+    <div id="container">           
 
         <div id="agenda_panel">
+            <h2>Affichage</h2>
+            <hr>
+            <fieldset id="choix_vue">
+                <label><input type="radio" name="vue" value="timeGridDay"> Jour </label>
+                <label><input type="radio" name="vue" value="timeGrid4Day"> 4 jours </label>
+                <label><input type="radio" name="vue" value="timeGridWeek"> Semaine </label>
+                <label><input type="radio" name="vue" value="dayGridMonth"> Mois </label>
+                <label><input type="radio" name="vue" value="listWeek"> Liste </label>
+            </fieldset>
+
             <h2>Mes agendas</h2>
             <hr>
             <div id="agenda_list"></div>
 
             <form id="agenda_form">
-                <label for="agenda_nom"></label><input type="text" id="agenda_nom" placeholder="Nom de l'agenda" required>
-                <label for="agenda_couleur"></label><input type="color" id="agenda_couleur" value="#3788d8">
-                <button type="submit">Créer</button>
-                <p id="agenda_erreur"></p>
+                <div class="ligne_form">
+                    <label for="agenda_nom" class="sr-only">Nom de l'agenda</label>
+                    <input type="text" id="agenda_nom" placeholder="Nom de l'agenda" required>
+                    
+                    <label for="agenda_couleur" class="sr-only">Couleur de l'agenda</label>
+                    <input type="color" id="agenda_couleur" value="#3788d8">
+                </div>
+                <button type="submit" class="bouton">Créer</button>
+                <p id="agenda_erreur" class="erreur"></p>
             </form>
         </div>
         
-        <div id="calendar"></div>
+        <div id="calendar_container">
+            <div id="calendar_header">
+                <div id="calendar_button">
+                    <button type="button" id="prev" aria-label="Précédent">
+                        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                            <path d="M15 6l-6 6 6 6" />
+                        </svg>
+                    </button>
+                    <button type="button" id="today">
+                        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                            <rect x="3" y="5" width="18" height="16" rx="2" />
+                            <path d="M3 10h18M8 3v4M16 3v4" />
+                            <circle cx="12" cy="15.5" r="3" class="point" />
+                        </svg>
+                        <span class="texte">Aujourd'hui</span>
+                    </button>
+                    <button type="button" id="next" aria-label="Suivant">
+                        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                            <path d="M9 6l6 6-6 6" />
+                        </svg>
+                    </button>
+                </div>
+                <h2 id="calendar_month"></h2>
+              </div>
+            <div id="calendar"></div>
+        </div>
     </div>
+    
+    <button type="button" id="ajout_activite" aria-label="Nouvelle activité">
+        <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+        </svg>
+    </button>
+
+    <div id="overlay"></div>
 
     <!-- Window to create or edit an activity (opened by activityModal.js) -->
     <dialog id="activite_modal">

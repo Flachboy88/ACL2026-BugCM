@@ -14,7 +14,7 @@ export function initAgendaPanel(calendar, panelId, agendas){
 }
 
 /**
- * Parser pour l'API FullCalender
+ * Parser for fullcalendar API
  */
 function transformEvent(activite) {
   return {
@@ -22,15 +22,15 @@ function transformEvent(activite) {
     title: activite.titre,
     start: activite.debut,
     end: activite.fin,
-    extendedProps: { 
-      lieu: activite.lieu, 
-      description: activite.description 
+    extendedProps: {
+      lieu: activite.lieu,
+      description: activite.description
     }
   };
 }
 
 /**
- * Agendas cochés dans le panneau ({ id, nom }) : ceux qu'on peut choisir dans la fenêtre d'activité.
+ * Agendas checked on agenda_panel ({ id, nom })
  */
 function getCheckedAgendas() {
   const agendas = [];
@@ -43,7 +43,7 @@ function getCheckedAgendas() {
 }
 
 /**
- * Sélection d'un créneau : ouvre la fenêtre de création d'une activité.
+ * Selection of a time slot : open modal window of activity creation
  */
 function handleSelect(info) {
   const calendar = info.view.calendar;
@@ -58,36 +58,50 @@ function handleSelect(info) {
 }
 
 /**
- * Clic sur une activité : ouvre la fenêtre de modification (avec le bouton Supprimer).
+ * Click on a activity : open modal window for the modification and supression
  */
 function handleEventClick(info) {
   openEditModal(info.view.calendar, info.event, getCheckedAgendas());
 }
 
+
 /**
- * Initialise et configure FullCalendar.
+ * Initialize and configurate FullCalendar.
  */
+export const mobile = window.matchMedia('(max-width: 768px)');
+
+const DAY_FORMAT = isMobile => ({ weekday: isMobile ? 'short' : 'long', day: 'numeric' });
+
 export function createCalendar(elementId) {
   const calendarEl = document.getElementById(elementId);
 
-  return new FullCalendar.Calendar(calendarEl, {
+  const calendar = new FullCalendar.Calendar(calendarEl, {
     schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
 
-    // Config visuelle et locale
-    initialView: 'timeGridWeek',
+    // View and calendar config
+    initialView: mobile.matches ? 'timeGridDay' : 'timeGridWeek',
     locale: 'fr',
     firstDay: 1,
     height: '100%',
+    dayHeaderFormat: DAY_FORMAT(mobile.matches),
+    titleFormat: { month: 'long', year: 'numeric' },
+    headerToolbar: false,
+    views: {
+        timeGridDay: { dayHeaderFormat: { weekday: 'long', day: 'numeric' } },
+        dayGridMonth: { dayHeaderFormat: { weekday: 'short' } },
+        timeGrid4Day: {
+            type: 'timeGrid',
+            duration: { days: 4 },
+            buttonText: '4 jours',
+            dayHeaderFormat: { weekday: 'short', day: 'numeric' }
+        }
+    },
+
+    allDayText: 'Journée entière',
 
     // Navigation & temps
     nowIndicator: true,
     scrollTime: getScrollTime(),
-
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'timeGridDay,timeGridWeek,dayGridMonth,listWeek'
-    },
 
     // Glisser-déposer désactivé : il n'est pas encore enregistré (prévu au sprint suivant)
     editable: false,
@@ -102,6 +116,14 @@ export function createCalendar(elementId) {
       this.scrollToTime(getScrollTime());
     }
   });
+
+    //rotation & resizing => adpat the display without recreate it
+    mobile.addEventListener('change', e => {
+        calendar.changeView(e.matches ? 'timeGridDay' : 'timeGridWeek');
+        calendar.setOption('dayHeaderFormat', DAY_FORMAT(e.matches));
+    });
+
+    return calendar;
 }
 
 // Event source of one agenda: FullCalendar fetches its activities for the displayed period
