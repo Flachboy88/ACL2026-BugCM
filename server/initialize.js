@@ -55,8 +55,6 @@ const getRandomHexColor = () => {
   return `#${randomNumber.toString(16).padStart(6, '0')}`;
 };
 
-
-
 testUsers.forEach(user => { 
 
     insertData.run(user.nom, user.email, user.passwordHash);
