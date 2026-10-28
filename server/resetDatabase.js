@@ -2,7 +2,10 @@
 // Used by "npm run db:reset". The server must be stopped first.
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Same file as in server/database.js
 const DATABASE_FILE = path.join(__dirname, "..", "data", "agenda.db");
