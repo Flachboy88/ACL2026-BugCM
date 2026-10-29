@@ -1,4 +1,5 @@
 import { openCreateModal, openEditModal } from './activityModal.js';
+import { openAgendaModal } from './agendaModal.js';
 
 export function getScrollTime() {
   const h = Math.max(new Date().getHours() - 1, 0);
@@ -134,6 +135,13 @@ const displayRessource = r => ({
     eventDataTransform: transformEvent
 });
 
+// Reloads the agenda's activities with its new color (only if it is currently shown)
+function refreshEventSource(calendar, cb, r) {
+    if (!cb.checked) return;
+    calendar.getEventSourceById(r.id)?.remove();
+    calendar.addEventSource(displayRessource(r));
+}
+
 export function addAgendaToPanel(calendar, panel, r) {
     calendar.addEventSource(displayRessource(r));
 
@@ -147,14 +155,35 @@ export function addAgendaToPanel(calendar, panel, r) {
         else calendar.getEventSourceById(r.id)?.remove();
     });
     label.append(r.title);
-    div.append(cb, label);
+
+    // Pencil: opens the edit window; its click must not toggle the checkbox
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.className = 'agenda_edit';
+    edit.setAttribute('aria-label', "Modifier l'agenda");
+    edit.textContent = '✎';
+    edit.addEventListener('click', e => {
+        e.stopPropagation();
+        openAgendaModal(r, modifie => {
+            // Mise à jour du panneau et du calendrier sans recharger
+            r.title = modifie.nom;
+            r.eventColor = modifie.couleur;
+            r.description = modifie.description;
+            label.textContent = r.title;
+            div.style.setProperty('--agenda-color', r.eventColor || '#94a3b8');
+            cb.style.accentColor = r.eventColor;
+            refreshEventSource(calendar, cb, r);
+        });
+    });
+
+    div.append(cb, label, edit);
     panel.append(div);
 
     div.classList.add('agenda');
     div.id = r.id;
     div.style.setProperty('--agenda-color', r.eventColor || '#94a3b8');
     div.addEventListener('click', e => {
-        if (e.target !== cb) cb.click();
+        if (e.target !== cb && e.target !== edit) cb.click();
     });
     cb.style.accentColor = r.eventColor;
 
