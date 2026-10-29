@@ -104,7 +104,7 @@ export function createCalendar(elementId) {
     scrollTime: getScrollTime(),
 
     // Glisser-déposer désactivé : il n'est pas encore enregistré (prévu au sprint suivant)
-    editable: false,
+    editable: true,
     selectable: true,
 
     // Handlers des activitées (création, modification, suppression)
