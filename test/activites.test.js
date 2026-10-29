@@ -220,6 +220,30 @@ describe("PUT /api/activites/:idActivite", function () {
 
         assert.equal(response.status, 404);
     });
+
+    test("refuse s'il manque le titre (400)", async function () {
+        const activite = await creerActivite();
+
+        const response = await requete(url, "/api/activites/" + activite.idActivite, {
+            method: "PUT",
+            cookie: cookieAlice,
+            body: { debut: "2026-10-16T08:00:00Z", fin: "2026-10-16T09:00:00Z" }
+        });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { erreur: "Champs manquants" });
+    });
+
+    test("répond 401 sans être connecté", async function () {
+        const activite = await creerActivite();
+
+        const response = await requete(url, "/api/activites/" + activite.idActivite, {
+            method: "PUT",
+            body: { titre: "Cours", debut: "2026-10-16T08:00:00Z", fin: "2026-10-16T09:00:00Z" }
+        });
+
+        assert.equal(response.status, 401);
+    });
 });
 
 describe("DELETE /api/activites/:idActivite", function () {
