@@ -115,3 +115,107 @@ describe("POST /api/agendas", function () {
         assert.equal(response.status, 401);
     });
 });
+
+describe("PUT /api/agendas/:idAgenda", function () {
+    test("modifie l'agenda et le renvoie", async function () {
+        const cookie = await creerUtilisateur(url);
+        const agenda = await creerAgenda(url, cookie, "Ancien");
+
+        const response = await requete(url, "/api/agendas/" + agenda.idAgenda, {
+            method: "PUT",
+            cookie: cookie,
+            body: { nom: "  Nouveau  ", couleur: "#00ff00", description: "Révisé" }
+        });
+        const modifie = await response.json();
+
+        assert.equal(response.status, 200);
+        assert.equal(modifie.idAgenda, agenda.idAgenda);
+        // Les espaces autour du nom sont retirés
+        assert.equal(modifie.nom, "Nouveau");
+        assert.equal(modifie.couleur, "#00ff00");
+        assert.equal(modifie.description, "Révisé");
+    });
+
+    test("accepte une modification sans description (null)", async function () {
+        const cookie = await creerUtilisateur(url);
+        const agenda = await creerAgenda(url, cookie, "Loisirs");
+
+        const response = await requete(url, "/api/agendas/" + agenda.idAgenda, {
+            method: "PUT",
+            cookie: cookie,
+            body: { nom: "Loisirs", couleur: "#00ff00" }
+        });
+
+        assert.equal(response.status, 200);
+        assert.equal((await response.json()).description, null);
+    });
+
+    test("refuse un nom vide (400)", async function () {
+        const cookie = await creerUtilisateur(url);
+        const agenda = await creerAgenda(url, cookie);
+
+        const response = await requete(url, "/api/agendas/" + agenda.idAgenda, {
+            method: "PUT",
+            cookie: cookie,
+            body: { nom: "   ", couleur: "#ff0000" }
+        });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { erreur: "Le nom est obligatoire" });
+    });
+
+    test("refuse une couleur qui n'est pas au format #RRGGBB (400)", async function () {
+        const cookie = await creerUtilisateur(url);
+        const agenda = await creerAgenda(url, cookie);
+
+        const response = await requete(url, "/api/agendas/" + agenda.idAgenda, {
+            method: "PUT",
+            cookie: cookie,
+            body: { nom: "Travail", couleur: "rouge" }
+        });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { erreur: "Couleur invalide (format #RRGGBB)" });
+    });
+
+    test("répond 404 pour l'agenda d'un autre utilisateur, sans le modifier", async function () {
+        const cookieAlice = await creerUtilisateur(url);
+        const cookieBob = await creerUtilisateur(url);
+        const agenda = await creerAgenda(url, cookieAlice, "À Alice");
+
+        const response = await requete(url, "/api/agendas/" + agenda.idAgenda, {
+            method: "PUT",
+            cookie: cookieBob,
+            body: { nom: "Volé par Bob", couleur: "#ff0000" }
+        });
+
+        assert.equal(response.status, 404);
+        assert.deepEqual(await response.json(), { erreur: "Agenda introuvable" });
+        // Alice retrouve son agenda tel quel
+        const liste = await requete(url, "/api/agendas", { cookie: cookieAlice });
+        const noms = (await liste.json()).map(function (a) { return a.nom; });
+        assert.ok(noms.includes("À Alice"));
+        assert.ok(!noms.includes("Volé par Bob"));
+    });
+
+    test("répond 404 pour un agenda qui n'existe pas", async function () {
+        const cookie = await creerUtilisateur(url);
+
+        const response = await requete(url, "/api/agendas/999999", {
+            method: "PUT",
+            cookie: cookie,
+            body: { nom: "Travail", couleur: "#ff0000" }
+        });
+
+        assert.equal(response.status, 404);
+    });
+
+    test("répond 401 sans être connecté", async function () {
+        const response = await requete(url, "/api/agendas/1", {
+            method: "PUT",
+            body: { nom: "Travail", couleur: "#ff0000" }
+        });
+
+        assert.equal(response.status, 401);
+    });
+});
