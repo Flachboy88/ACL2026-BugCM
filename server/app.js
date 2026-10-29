@@ -63,9 +63,10 @@ app.post("/register", function (request, response){
     }
 });
 
-app.post("/logout" ,function logout(req,res) {
-    res.cookie('accessToken', null);
-    res.redirect('/login');
+app.post("/logout", function logout(req, res) {
+    // Efface le cookie du jeton : le navigateur le supprime vraiment (au lieu de le mettre à "null")
+    res.clearCookie("accessToken");
+    res.redirect("/login");
 });
 
 // Web pages (rendered with EJS)
