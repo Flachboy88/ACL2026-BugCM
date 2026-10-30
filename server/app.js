@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import agendasRouter from "./routes/agendas.js";
 import activitesRouter from "./routes/activites.js";
+import bcrypt from "bcrypt";
 
 const CLIENT_FOLDER = path.join(import.meta.dirname, "..", "client");
 
@@ -31,8 +32,8 @@ app.post("/login", function (request, response){
     if(!isFilled(email) || !isFilled(password)){
         return response.status(400).json({erreur: "Champs manquants"});
     }
-    const user = database.prepare("SELECT * FROM utilisateur WHERE email = ? AND mot_de_passe_hash = ?").get(email, password);
-    if(typeof(user) === "undefined"){
+    const user = database.prepare("SELECT * FROM utilisateur WHERE email = ?").get(email);
+    if(typeof(user) === "undefined" || !bcrypt.compareSync(password, user.mot_de_passe_hash)){
         return response.status(401).json({erreur: "Identifiants incorrects"});
     } else {
         const token = createJWT({id: user["id_utilisateur"], username: user.nom});
@@ -50,7 +51,8 @@ app.post("/register", function (request, response){
     const userExists = database.prepare("SELECT email FROM utilisateur WHERE email = ?").get(email);
     if(typeof(userExists) === "undefined"){
         if(password === confirmPassword){
-            const user = database.prepare("INSERT INTO utilisateur (nom, email, mot_de_passe_hash) VALUES (?, ?, ?)").run(userName, email, password);
+            const passwordHash = bcrypt.hashSync(password,10);
+            const user = database.prepare("INSERT INTO utilisateur (nom, email, mot_de_passe_hash) VALUES (?, ?, ?)").run(userName, email, passwordHash);
             const lifetime = 1000 * 60 * 30;
             const token = createJWT({id: user.lastInsertRowid, username: userName});
             response.cookie("accessToken", token, {httpOnly: true, maxAge: lifetime});
