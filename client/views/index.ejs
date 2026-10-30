@@ -35,10 +35,12 @@
                 <div class="ligne_form">
                     <label for="agenda_nom" class="sr-only">Nom de l'agenda</label>
                     <input type="text" id="agenda_nom" placeholder="Nom de l'agenda" required>
-                    
+
                     <label for="agenda_couleur" class="sr-only">Couleur de l'agenda</label>
                     <input type="color" id="agenda_couleur" value="#3788d8">
                 </div>
+                <label for="agenda_description" class="sr-only">Description de l'agenda</label>
+                <input type="text" id="agenda_description" placeholder="Description (optionnel)">
                 <button type="submit" class="bouton">Créer</button>
                 <p id="agenda_erreur" class="erreur"></p>
             </form>
@@ -112,6 +114,30 @@
             <div class="modal_boutons">
                 <button type="button" id="activite_supprimer" class="bouton_supprimer">Supprimer</button>
                 <button type="button" id="activite_annuler">Annuler</button>
+                <button type="submit" class="bouton_enregistrer">Enregistrer</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Window to edit an agenda (opened by agendaModal.js) -->
+    <dialog id="agenda_modal">
+        <form id="agenda_modal_form">
+            <h2>Modifier l'agenda</h2>
+            <div class="field">
+                <label for="agenda_modal_nom">Nom</label>
+                <input type="text" id="agenda_modal_nom" required>
+            </div>
+            <div class="field">
+                <label for="agenda_modal_couleur">Couleur</label>
+                <input type="color" id="agenda_modal_couleur">
+            </div>
+            <div class="field">
+                <label for="agenda_modal_description">Description</label>
+                <textarea id="agenda_modal_description" rows="3"></textarea>
+            </div>
+            <p id="agenda_modal_erreur" class="erreur"></p>
+            <div class="modal_boutons">
+                <button type="button" id="agenda_modal_annuler">Annuler</button>
                 <button type="submit" class="bouton_enregistrer">Enregistrer</button>
             </div>
         </form>

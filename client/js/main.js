@@ -1,7 +1,7 @@
 import { createCalendar, initAgendaPanel, addAgendaToPanel, mobile } from './calendar.js';
 
 function toPanelAgenda(agenda) {
-    return { id: String(agenda.idAgenda), title: agenda.nom, eventColor: agenda.couleur };
+    return { id: String(agenda.idAgenda), title: agenda.nom, eventColor: agenda.couleur, description: agenda.description };
 }
 
 // Creates and shows the calendar
@@ -33,7 +33,8 @@ form.addEventListener('submit', async function (event) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             nom: document.getElementById('agenda_nom').value,
-            couleur: document.getElementById('agenda_couleur').value
+            couleur: document.getElementById('agenda_couleur').value,
+            description: document.getElementById('agenda_description').value.trim() || null
         })
     });
     const donnees = await reponse.json();

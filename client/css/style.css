@@ -585,7 +585,8 @@ label {
    ACTIVITY MODAL (create / edit an activity)
    ========================================================================== */
 
-#activite_modal {
+#activite_modal,
+#agenda_modal {
     width: 420px;
     max-width: calc(100vw - 32px);
     border: none;
@@ -594,17 +595,20 @@ label {
     box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
 }
 
-#activite_modal::backdrop {
+#activite_modal::backdrop,
+#agenda_modal::backdrop {
     background: rgba(0, 0, 0, .4);
 }
 
-#activite_modal h2 {
+#activite_modal h2,
+#agenda_modal h2 {
     margin: 0 0 16px;
     font-size: 20px;
 }
 
 #activite_modal select,
-#activite_modal textarea {
+#activite_modal textarea,
+#agenda_modal textarea {
     width: 100%;
     padding: 12px;
     border: 1px solid var(--border);
