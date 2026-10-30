@@ -72,6 +72,24 @@ export const mobile = window.matchMedia('(max-width: 768px)');
 
 const DAY_FORMAT = isMobile => ({ weekday: isMobile ? 'short' : 'long', day: 'numeric' });
 
+
+function renderEventContext(eventInfo){
+  const { title, extendedProps} = eventInfo.event ; 
+  const { lieu, description} = extendedProps ; 
+
+  // Renvoie le HTML avec Titre + Lieu + Description 
+  return {
+    html: `
+      <div class="fc-event-main-frame">
+        <!-- Titre d'origine de l'événement -->
+        <div class="fc-event-title font-semibold">${title}</div>
+        ${lieu ? `<div class="fc-event-lieu text-xs">Lieu : ${lieu}</div>` : ''}
+        ${description ? `<div class="fc-event-desc text-xs italic opacity-90">Tâche : ${description}</div>` : ''}
+      </div>
+    `
+  };
+}
+
 export function createCalendar(elementId) {
   const calendarEl = document.getElementById(elementId);
 
@@ -104,14 +122,15 @@ export function createCalendar(elementId) {
     scrollTime: getScrollTime(),
 
     // Glisser-déposer désactivé : il n'est pas encore enregistré (prévu au sprint suivant)
-    editable: false,
+    editable: true,
     selectable: true,
 
     // Handlers des activitées (création, modification, suppression)
     // Les événements viennent des sources ajoutées par addAgendaToPanel (une par agenda)
     select: handleSelect,
     eventClick: handleEventClick,
-
+    eventContent: renderEventContext, // Titre + Lieu + Description
+    
     datesSet() {
       this.scrollToTime(getScrollTime());
     }
