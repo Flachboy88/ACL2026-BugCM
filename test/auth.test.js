@@ -126,6 +126,17 @@ describe("POST /logout", function () {
         assert.equal(response.status, 302);
         assert.equal(response.headers.get("location"), "/login");
     });
+
+    test("le cookie renvoyé ne connecte plus à l'API", async function () {
+        const cookie = await creerUtilisateur(url);
+
+        const reponseLogout = await requete(url, "/logout", { method: "POST", cookie: cookie });
+        const cookieApresLogout = lireCookie(reponseLogout);
+
+        // Avec le cookie posé par /logout, l'API répond comme à un visiteur
+        const response = await requete(url, "/api/agendas", { cookie: cookieApresLogout });
+        assert.equal(response.status, 401);
+    });
 });
 
 describe("Accès aux pages", function () {

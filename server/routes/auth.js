@@ -50,8 +50,9 @@ router.post("/register", function (request, response){
 });
 
 router.post("/logout" ,function logout(req,res) {
-    res.cookie('accessToken', null);
-    res.redirect('/login');
+    // Efface le cookie du jeton : le navigateur le supprime vraiment (au lieu de le mettre à "null")
+    res.clearCookie("accessToken");
+    res.redirect("/login");
 });
 
 export default router;
