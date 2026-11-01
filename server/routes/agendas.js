@@ -45,4 +45,24 @@ router.post("/agendas", function (request, response) {
     response.status(201).json(toJson(row));
 });
 
+// Modifier un agenda de l'utilisateur connecté (nom, couleur, description)
+router.put("/agendas/:idAgenda", function (request, response) {
+    const { nom, couleur, description } = request.body ?? {};
+    if (typeof nom !== "string" || nom.trim() === "") {
+        return response.status(400).json({ erreur: "Le nom est obligatoire" });
+    }
+    if (typeof couleur !== "string" || !COULEUR_VALIDE.test(couleur)) {
+        return response.status(400).json({ erreur: "Couleur invalide (format #RRGGBB)" });
+    }
+    // On ne modifie que si l'agenda appartient à l'utilisateur connecté
+    const result = database.prepare(
+        "UPDATE agenda SET nom = ?, couleur = ?, description = ? WHERE id_agenda = ? AND id_utilisateur = ?"
+    ).run(nom.trim(), couleur, description ?? null, request.params.idAgenda, getIdUtilisateur(response));
+    if (result.changes === 0) {
+        return response.status(404).json({ erreur: "Agenda introuvable" });
+    }
+    const row = database.prepare("SELECT * FROM agenda WHERE id_agenda = ?").get(request.params.idAgenda);
+    response.json(toJson(row));
+});
+
 export default router;
