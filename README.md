@@ -83,8 +83,9 @@ Un **serveur unique** (Express) assure deux rôles, sur des routes distinctes :
 │       └── partials/       # Morceaux de page réutilisés (ex : header)
 ├── server/
 │   ├── server.js           # Point d'entrée : prépare la base puis démarre le serveur (port 3000)
-│   ├── app.js              # Application Express : connexion / inscription / déconnexion + pages Web, sans la démarrer
-│   ├── routes/             # Routes de l'API : agendas.js et activites.js
+│   ├── app.js              # Application Express : assemble les middlewares et les routes, sans la démarrer
+│   ├── middlewares/        # Middlewares partagés : auth.js (lecture du jeton, protection des routes)
+│   ├── routes/             # Routes : auth.js (connexion), pages.js (pages EJS), agendas.js, activites.js
 │   ├── database.js         # Connexion à la base SQLite
 │   ├── migrations.js       # Application des migrations au démarrage
 │   ├── resetDatabase.js    # Effacement de la base locale (npm run db:reset)
