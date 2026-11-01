@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import bcrypt from "bcrypt";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,18 +49,21 @@ const testUsers = [
 
 const insertData = db.prepare("INSERT OR IGNORE INTO utilisateur(nom, email, mot_de_passe_hash) VALUES(?, ?, ?)");
 const defautAgenda = db.prepare("INSERT OR IGNORE INTO agenda (nom, couleur, description, id_utilisateur) VALUES(?, ?, ?, ?)");
-const GetterIdUtilisateur = db.prepare("SELECT id_utilisateur FROM utilisateur WHERE nom = ? AND email = ? AND mot_de_passe_hash = ? ");
+// Recherche par nom + email : le hash bcrypt n'est pas déterministe, on ne peut plus le comparer en clair
+const GetterIdUtilisateur = db.prepare("SELECT id_utilisateur FROM utilisateur WHERE nom = ? AND email = ?");
 
 const getRandomHexColor = () => {
   const randomNumber = Math.floor(Math.random() * 16777215);
   return `#${randomNumber.toString(16).padStart(6, '0')}`;
 };
 
-testUsers.forEach(user => { 
+testUsers.forEach(user => {
 
-    insertData.run(user.nom, user.email, user.passwordHash);
+    // passwordHash contient le mot de passe en clair : on le hache avant insertion, comme à l'inscription
+    const motDePasseHash = bcrypt.hashSync(user.passwordHash, 10);
+    insertData.run(user.nom, user.email, motDePasseHash);
     console.log("Création sur : " + user.nom);
-    const userRow = GetterIdUtilisateur.get(user.nom, user.email, user.passwordHash);
+    const userRow = GetterIdUtilisateur.get(user.nom, user.email);
 
     if (userRow) {
         const userId = userRow.id_utilisateur; 

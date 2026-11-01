@@ -1,6 +1,8 @@
 // Tests de l'inscription, de la connexion, de la déconnexion et de l'accès aux pages
 import { describe, test, before, after } from "node:test";
 import assert from "node:assert/strict";
+import bcrypt from "bcrypt";
+import database from "../server/database.js";
 import { demarrerServeur, requete, lireCookie, creerUtilisateur } from "./helpers.js";
 
 // Serveur de test pour ce fichier, sur un port libre
@@ -51,6 +53,22 @@ describe("POST /register", function () {
 
         assert.equal(response.status, 400);
         assert.deepEqual(await response.json(), { erreur: "Email déjà pris" });
+    });
+
+    test("stocke le mot de passe haché, jamais en clair", async function () {
+        await requete(url, "/register", {
+            method: "POST",
+            body: { userName: "Hugo", email: "hugo@test.fr", password: "secret", confirmPassword: "secret" }
+        });
+
+        const { mot_de_passe_hash } = database
+            .prepare("SELECT mot_de_passe_hash FROM utilisateur WHERE email = ?")
+            .get("hugo@test.fr");
+
+        // Le mot de passe en clair ne doit jamais apparaître en base
+        assert.notEqual(mot_de_passe_hash, "secret");
+        // C'est bien un hash bcrypt valide pour ce mot de passe
+        assert.ok(bcrypt.compareSync("secret", mot_de_passe_hash));
     });
 });
 
