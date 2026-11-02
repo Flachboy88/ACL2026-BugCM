@@ -223,6 +223,37 @@ label {
     transform: translateY(20px);
 }
 
+.bouton_modifier_mdp {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background-color: white;
+    cursor: pointer;
+    transition: background-color .2s, border-color .2s;
+}
+
+.bouton_modifier_mdp:hover {
+    background-color: #f3f4f6;
+    border-color: var(--primary);
+}
+
+.bouton_modifier_mdp svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 /* --- Main card --- */
 
 .profil_carte {
