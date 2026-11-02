@@ -146,7 +146,7 @@ label {
 
 
 /* ==========================================================================
-   HEADER (burger, site title, logout)
+   HEADER (burger, site title, logout, profil)
    ========================================================================== */
 
 #header {
@@ -168,7 +168,8 @@ label {
 }
 
 /* --- Logout button --- */
-.bouton_deconnexion {
+.bouton_deconnexion,
+.bouton_profil{
     width: 100%;
     border-radius: 8px;
     background-color: var(--primary);
@@ -193,6 +194,249 @@ label {
     display: none;
 }
 
+/* ==========================================================================
+   PAGE PROFIL
+   ========================================================================== */
+.profil_page {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 50px 20px;
+}
+
+/* --- Buttons --- */
+.bouton_accueil{
+    width: 100%;
+    border-radius: 8px;
+    background-color: var(--primary);
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    max-width: 200px;
+    min-width: 150px;
+    border: none;
+    transition: background-color .2s;
+    position: relative;
+    align-items: center;
+    flex-shrink: 0;
+    transform: translateY(20px);
+}
+
+/* --- Main card --- */
+
+.profil_carte {
+    width: 100%;
+    max-width: 650px;
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 36px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .08),
+    0 8px 24px rgba(0, 0, 0, .06);
+
+    animation: apparition 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- Profile header --- */
+
+.profil_header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.profil_avatar {
+    width: 70px;
+    height: 70px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: color-mix(in srgb, var(--primary) 12%, white);
+    border-radius: 50%;
+}
+
+.profil_avatar svg {
+    width: 36px;
+    height: 36px;
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.profil_titre h2 {
+    margin: 0 0 6px;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.profil_titre p {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* --- Separators --- */
+
+.profil_separateur {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+}
+
+/* --- Information blocks --- */
+
+.profil_informations {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.profil_information {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    padding: 20px;
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    transition: border-color .2s, background-color .2s;
+}
+
+.profil_information:hover {
+    border-color: color-mix(in srgb, var(--primary) 40%, white);
+    background: color-mix(in srgb, var(--primary) 3%, white);
+}
+
+/* --- Information icons --- */
+
+.profil_icone {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: color-mix(in srgb, var(--primary) 10%, white);
+    border-radius: 10px;
+}
+
+.profil_icone svg {
+    width: 23px;
+    height: 23px;
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* --- Information text --- */
+
+.profil_texte {
+    min-width: 0;
+}
+
+.profil_texte span {
+    display: block;
+    margin-bottom: 6px;
+
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.profil_texte p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+/* --- Card footer --- */
+
+.profil_pied {
+    text-align: center;
+}
+
+.profil_pied p {
+    margin: 0;
+    font-size: 13px;
+    color: #9ca3af;
+}
+
+.login .bouton_profil,
+.register .bouton_profil {
+    display: none;
+}
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+
+    .profil_page {
+        padding: 30px 16px;
+    }
+
+    .profil_carte {
+        padding: 24px 20px;
+        border-radius: 12px;
+    }
+
+    .profil_header {
+        gap: 14px;
+    }
+
+    .profil_avatar {
+        width: 58px;
+        height: 58px;
+    }
+
+    .profil_avatar svg {
+        width: 30px;
+        height: 30px;
+    }
+
+    .profil_titre h2 {
+        font-size: 21px;
+    }
+
+    .profil_information {
+        padding: 16px;
+        gap: 14px;
+    }
+
+}
+
+@media (max-width: 400px) {
+
+    .profil_page {
+        padding: 20px 10px;
+    }
+
+    .profil_carte {
+        padding: 20px 14px;
+    }
+
+    .profil_information {
+        padding: 14px 10px;
+    }
+
+    .profil_texte p {
+        font-size: 14px;
+    }
+
+}
+
 /* --- Burger button (turns into a cross when the panel is open) --- */
 #burger {
     background: none;
@@ -208,7 +452,8 @@ label {
 }
 
 .login #burger,
-.register #burger {
+.register #burger,
+.profil #burger {
     display: none;
 }
 
