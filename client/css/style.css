@@ -260,20 +260,22 @@ label {
 
 /* --- Buttons --- */
 .bouton_accueil{
+    display: block;
     width: 100%;
+    max-width: 200px;
+    margin: 20px auto 0;
     border-radius: 8px;
     background-color: var(--primary);
     color: white;
     padding: 12px 20px;
     font-size: 16px;
-    max-width: 200px;
-    min-width: 150px;
     border: none;
+    text-align: center;
     transition: background-color .2s;
-    position: relative;
-    align-items: center;
-    flex-shrink: 0;
-    transform: translateY(20px);
+}
+
+.bouton_accueil:hover {
+    background-color: var(--primary-hover);
 }
 
 .bouton_modifier_mdp {
