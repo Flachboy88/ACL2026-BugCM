@@ -8,11 +8,24 @@
       </svg>
     </button>
     <h1>Agenda BugCM</h1>
-    <a href="/profil" class="bouton_profil">
-        Mon profil
-    </a>
-    <button type="button" class="bouton_deconnexion" id="logout">
-            Deconnexion
-    </button>
+
+    <!-- Avatar with its dropdown menu (will be able to show a photo later) -->
+    <div class="profil_menu">
+        <button type="button" id="pastille_profil" class="pastille_profil"
+                aria-haspopup="true" aria-expanded="false" aria-controls="menu_profil"
+                aria-label="Menu du profil">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="8" r="4"></circle>
+                <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path>
+            </svg>
+        </button>
+
+        <div id="menu_profil" class="menu_profil" hidden>
+            <a href="/profil">Voir profil</a>
+            <button type="button" id="logout">Déconnexion</button>
+        </div>
+    </div>
+
+    <script src="/js/profilMenu.js"></script>
     <script src="/js/logout.js"></script>
 </div>

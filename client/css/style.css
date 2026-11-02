@@ -167,30 +167,83 @@ label {
     font-size: 14px;
 }
 
-/* --- Logout button --- */
-.bouton_deconnexion,
-.bouton_profil{
-    width: 100%;
-    border-radius: 8px;
-    background-color: var(--primary);
-    color: white;
-    padding: 12px 20px;
-    font-size: 16px;
-    max-width: 200px;
-    min-width: 150px;
-    border: none;
-    transition: background-color .2s;
+/* --- Profile avatar and its dropdown menu --- */
+.profil_menu {
+    grid-column: 3;
     justify-self: end;
+    position: relative;
     margin-right: 15px;
-    flex-shrink: 0;
 }
 
-.bouton_deconnexion:hover {
-    background-color: var(--primary-hover);
+/* Round avatar (a placeholder icon for now, a photo later) */
+.pastille_profil {
+    width: 44px;
+    height: 44px;
+    padding: 8px;
+    border: none;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--primary) 12%, white);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color .2s;
 }
 
-.login .bouton_deconnexion,
-.register .bouton_deconnexion {
+.pastille_profil:hover {
+    background: color-mix(in srgb, var(--primary) 20%, white);
+}
+
+.pastille_profil svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* The hidden attribute must win over the display below */
+.menu_profil[hidden] {
+    display: none;
+}
+
+.menu_profil {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 10000;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+    overflow: hidden;
+}
+
+.menu_profil a,
+.menu_profil button {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 15px;
+    color: var(--text);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color .2s;
+}
+
+.menu_profil a:hover,
+.menu_profil button:hover {
+    background: #f3f4f6;
+}
+
+.login .profil_menu,
+.register .profil_menu {
     display: none;
 }
 
@@ -252,6 +305,64 @@ label {
     stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
+}
+
+/* --- Password change form --- */
+
+/* The hidden attribute must win over the display below */
+.form_mot_de_passe[hidden] {
+    display: none;
+}
+
+.form_mot_de_passe {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    padding: 20px;
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.form_mot_de_passe label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.form_mot_de_passe_actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.form_mot_de_passe_actions button {
+    border: none;
+    border-radius: 8px;
+    background-color: var(--primary);
+    color: white;
+    padding: 10px 20px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color .2s;
+}
+
+.form_mot_de_passe_actions button:hover {
+    background-color: var(--primary-hover);
+}
+
+.message_mdp {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.message_mdp.erreur {
+    color: #dc2626;
+}
+
+.message_mdp.succes {
+    color: #16a34a;
 }
 
 /* --- Main card --- */
@@ -404,10 +515,6 @@ label {
     color: #9ca3af;
 }
 
-.login .bouton_profil,
-.register .bouton_profil {
-    display: none;
-}
 /* ==========================================================================
    RESPONSIVE
    ========================================================================== */
@@ -502,10 +609,6 @@ label {
 #burger[aria-expanded="true"] .bas    { transform: rotate(-45deg) translateY(-6px); }
 
 @media (max-width: 768px) {
-    .bouton_deconnexion {
-        display: none;
-    }
-
     #burger {
         z-index: 10000;
     }
