@@ -9,6 +9,8 @@
     <!-- FullCalendar Scheduler (Premium), used by the current calendar.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.11/index.global.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales/fr.global.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/rrule@2.6.4/dist/es5/rrule.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@fullcalendar/rrule@6.1.11/index.global.min.js"></script>
 </head>
 <body>
     
@@ -97,6 +99,19 @@
             <div class="field">
                 <label for="activite_fin">Fin</label>
                 <input type="datetime-local" id="activite_fin" required>
+            </div>
+            <div class="field">
+                <label for="activite_frequence">Recurrence</label>
+                <select id="activite_frequence">
+                    <option value="">Aucune</option>
+                    <option value="quotidien">Chaque Jour</option>
+                    <option value="hebdomadaire">Chaque semaine</option>
+                    <option value="mensuel">Chaque mois</option>
+                </select>
+            </div>
+            <div class="field" id="activite_fin_recurrence_field" hidden>
+                <label for="activite_fin_recurrence">Jusqu'au (vide:sans fin)</label>
+                <input type="date" id="activite_fin_recurrence">
             </div>
             <div class="field">
                 <label for="activite_agenda">Agenda</label>

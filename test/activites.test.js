@@ -283,3 +283,136 @@ describe("DELETE /api/activites/:idActivite", function () {
         assert.equal(response.status, 401);
     });
 });
+
+describe("Répétition d'une activité (POST / PUT)", function () {
+    test("crée une série et renvoie frequence + finRecurrence", async function () {
+        const activite = await creerActivite({ frequence: "hebdomadaire", finRecurrence: "2026-12-31" });
+
+        assert.equal(activite.frequence, "hebdomadaire");
+        assert.equal(activite.finRecurrence, "2026-12-31");
+    });
+
+    test("crée une série sans date de fin (finRecurrence null)", async function () {
+        const activite = await creerActivite({ frequence: "quotidien" });
+
+        assert.equal(activite.frequence, "quotidien");
+        assert.equal(activite.finRecurrence, null);
+    });
+
+    test("une activité sans répétition a frequence et finRecurrence à null", async function () {
+        const activite = await creerActivite();
+
+        assert.equal(activite.frequence, null);
+        assert.equal(activite.finRecurrence, null);
+    });
+
+    test("refuse une fréquence inconnue (400)", async function () {
+        const response = await requete(url, "/api/agendas/" + agendaAlice.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieAlice,
+            body: { titre: "Cours", debut: "2026-10-15T08:00:00Z", fin: "2026-10-15T10:00:00Z", frequence: "annuel" }
+        });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { erreur: "Répétition invalide" });
+    });
+
+    test("refuse une date de fin de répétition mal formée (400)", async function () {
+        const response = await requete(url, "/api/agendas/" + agendaAlice.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieAlice,
+            body: { titre: "Cours", debut: "2026-10-15T08:00:00Z", fin: "2026-10-15T10:00:00Z", frequence: "hebdomadaire", finRecurrence: "31-12-2026" }
+        });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { erreur: "Date de fin de répétition invalide" });
+    });
+
+    test("refuse une date de fin avant le début (400)", async function () {
+        const response = await requete(url, "/api/agendas/" + agendaAlice.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieAlice,
+            body: { titre: "Cours", debut: "2026-10-15T08:00:00Z", fin: "2026-10-15T10:00:00Z", frequence: "hebdomadaire", finRecurrence: "2026-10-14" }
+        });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { erreur: "La répétition doit finir après le début" });
+    });
+
+    test("un PUT ajoute une répétition à une activité existante", async function () {
+        const activite = await creerActivite();
+
+        const response = await requete(url, "/api/activites/" + activite.idActivite, {
+            method: "PUT",
+            cookie: cookieAlice,
+            body: { titre: "Cours", debut: "2026-10-15T08:00:00Z", fin: "2026-10-15T10:00:00Z", frequence: "mensuel", finRecurrence: "2027-06-30" }
+        });
+        const modifiee = await response.json();
+
+        assert.equal(response.status, 200);
+        assert.equal(modifiee.frequence, "mensuel");
+        assert.equal(modifiee.finRecurrence, "2027-06-30");
+    });
+
+    test("un PUT sans frequence retire la répétition", async function () {
+        const activite = await creerActivite({ frequence: "hebdomadaire", finRecurrence: "2026-12-31" });
+
+        const response = await requete(url, "/api/activites/" + activite.idActivite, {
+            method: "PUT",
+            cookie: cookieAlice,
+            body: { titre: "Cours", debut: "2026-10-15T08:00:00Z", fin: "2026-10-15T10:00:00Z" }
+        });
+        const modifiee = await response.json();
+
+        assert.equal(response.status, 200);
+        assert.equal(modifiee.frequence, null);
+        assert.equal(modifiee.finRecurrence, null);
+    });
+});
+
+describe("GET : séries récurrentes qui touchent la période", function () {
+    let agenda;
+
+    // Un agenda à part : une activité simple et deux séries hebdomadaires, l'une finie, l'autre sans fin
+    before(async function () {
+        agenda = await creerAgenda(url, cookieAlice, "Récurrences");
+        // Activité simple le lundi 2 novembre
+        await requete(url, "/api/agendas/" + agenda.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieAlice,
+            body: { titre: "Simple", debut: "2026-11-02T08:00:00Z", fin: "2026-11-02T09:00:00Z" }
+        });
+        // Série sans fin commençant le lundi 2 novembre
+        await requete(url, "/api/agendas/" + agenda.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieAlice,
+            body: { titre: "Série sans fin", debut: "2026-11-02T08:00:00Z", fin: "2026-11-02T09:00:00Z", frequence: "hebdomadaire" }
+        });
+        // Série qui s'arrête le 5 novembre
+        await requete(url, "/api/agendas/" + agenda.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieAlice,
+            body: { titre: "Série finie", debut: "2026-11-02T08:00:00Z", fin: "2026-11-02T09:00:00Z", frequence: "hebdomadaire", finRecurrence: "2026-11-05" }
+        });
+    });
+
+    test("renvoie une série dont la première occurrence précède la période mais qui se répète dedans", async function () {
+        // Période trois semaines après le début : la série sans fin doit remonter, pas l'activité simple
+        const response = await requete(url,
+            "/api/agendas/" + agenda.idAgenda + "/activites?start=2026-11-23T00:00:00Z&end=2026-11-30T00:00:00Z",
+            { cookie: cookieAlice });
+        const titres = (await response.json()).map(function (activite) { return activite.titre; });
+
+        assert.ok(titres.includes("Série sans fin"));
+        assert.ok(!titres.includes("Simple"));
+    });
+
+    test("ne renvoie pas une série dont la date de fin est déjà passée", async function () {
+        const response = await requete(url,
+            "/api/agendas/" + agenda.idAgenda + "/activites?start=2026-11-23T00:00:00Z&end=2026-11-30T00:00:00Z",
+            { cookie: cookieAlice });
+        const titres = (await response.json()).map(function (activite) { return activite.titre; });
+
+        assert.ok(!titres.includes("Série finie"));
+    });
+});

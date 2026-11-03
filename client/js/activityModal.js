@@ -12,6 +12,9 @@ const descriptionInput = document.getElementById('activite_description');
 const erreurText = document.getElementById('activite_erreur');
 const deleteButton = document.getElementById('activite_supprimer');
 const cancelButton = document.getElementById('activite_annuler');
+const frequenceSelect = document.getElementById('activite_frequence');
+const finRecurrenceField = document.getElementById('activite_fin_recurrence_field');
+const finRecurrenceInput = document.getElementById('activite_fin_recurrence');
 
 // Calendar to refresh after a change, and activity being edited (null when creating)
 let currentCalendar = null;
@@ -61,11 +64,15 @@ export function openCreateModal(calendar, debut, fin, agendas) {
 
 // Opens the window to edit a clicked activity (its agenda cannot be changed for now)
 export function openEditModal(calendar, event, agendas) {
+    const props = event.extendedProps;
     prepareModal(calendar, event);
-    modalTitle.textContent = "Modifier l'activité";
+    modalTitle.textContent = props.frequence ? 'Modifier la série' : "Modifier l'activité";
     titreInput.value = event.title;
-    debutInput.value = toInputValue(event.start);
-    finInput.value = toInputValue(event.end);
+    debutInput.value = toInputValue(props.frequence ? new Date(props.debut) : event.start);
+    finInput.value = toInputValue(props.frequence ? new Date(props.fin) : event.end);
+    frequenceSelect.value = props.frequence ?? '';
+    finRecurrenceInput.value = props.finRecurrence ?? '';
+    updateFinRecurrence();
     lieuInput.value = event.extendedProps.lieu ?? '';
     descriptionInput.value = event.extendedProps.description ?? '';
     fillAgendaSelect(agendas, event.source.id);
@@ -81,7 +88,9 @@ function readForm() {
         debut: new Date(debutInput.value).toISOString(),
         fin: new Date(finInput.value).toISOString(),
         lieu: lieuInput.value.trim() === '' ? null : lieuInput.value.trim(),
-        description: descriptionInput.value.trim() === '' ? null : descriptionInput.value.trim()
+        description: descriptionInput.value.trim() === '' ? null : descriptionInput.value.trim(),
+        frequence: frequenceSelect.value === '' ? null : frequenceSelect.value,
+        finRecurrence: frequenceSelect.value === '' || finRecurrenceInput.value === '' ? null : finRecurrenceInput.value
     };
 }
 
@@ -113,9 +122,12 @@ form.addEventListener('submit', async function (event) {
 
 // Delete (only visible when editing), after a confirmation
 deleteButton.addEventListener('click', async function () {
-    if (!confirm('Supprimer cette activité ?')) return;
+    const message = editedEvent.extendedProps.frequence
+        ? 'Supprimer toutes les occurrences de cette activité ?'
+        : 'Supprimer cette activité ?';
+    if (!confirm(message)) return;
 
-    const reponse = await fetch(`/api/activites/${editedEvent.id}`, { method: 'DELETE' });
+const reponse = await fetch(`/api/activites/${editedEvent.id}`, { method: 'DELETE' });
     if (!reponse.ok) {
         erreurText.textContent = 'Suppression impossible';
         return;
@@ -128,3 +140,9 @@ deleteButton.addEventListener('click', async function () {
 cancelButton.addEventListener('click', function () {
     modal.close();
 });
+
+// display field 'FinRecurrence'
+function updateFinRecurrence() {
+    finRecurrenceField.hidden = frequenceSelect.value === '';
+}
+frequenceSelect.addEventListener('change', updateFinRecurrence);
