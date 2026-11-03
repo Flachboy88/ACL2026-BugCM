@@ -65,6 +65,32 @@ function handleEventClick(info) {
   openEditModal(info.view.calendar, info.event, getCheckedAgendas());
 }
 
+/**
+ * Saves an activity moved or resized at the mouse (no modal window).
+ * Sends the whole activity to the PUT route; on failure it is put back in place.
+ */
+async function saveMovedActivity(info) {
+  const event = info.event;
+  const body = {
+    titre: event.title,
+    debut: event.start.toISOString(),
+    fin: event.end.toISOString(),
+    lieu: event.extendedProps.lieu,
+    description: event.extendedProps.description
+  };
+
+  const reponse = await fetch(`/api/activites/${event.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!reponse.ok) {
+    info.revert();
+    alert("Déplacement impossible");
+  }
+}
+
 
 /**
  * Initialize and configurate FullCalendar.
@@ -122,7 +148,7 @@ export function createCalendar(elementId) {
     nowIndicator: true,
     scrollTime: getScrollTime(),
 
-    // Glisser-déposer désactivé : il n'est pas encore enregistré (prévu au sprint suivant)
+    // Glisser-déposer et redimensionnement activés : le changement est enregistré via la route PUT
     editable: true,
     selectable: true,
 
@@ -130,6 +156,8 @@ export function createCalendar(elementId) {
     // Les événements viennent des sources ajoutées par addAgendaToPanel (une par agenda)
     select: handleSelect,
     eventClick: handleEventClick,
+    eventDrop: saveMovedActivity,
+    eventResize: saveMovedActivity,
     eventContent: renderEventContext, // Titre + Lieu + Description
     
     datesSet() {
