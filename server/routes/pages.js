@@ -14,26 +14,25 @@ router.get("/login", redirectIfLogin, function (request, response) {
 router.get("/register", redirectIfLogin, function (request, response) {
     response.render("register");
 });
-// Page profil
 router.get("/profil", requireLogin, function (request, response) {
 
     try {
-        // Récupérer l'identifiant de l'utilisateur connecté
+        // getting the id of the use
         const idUtilisateur = response.locals.user.id;
 
-        // Récupérer son nom et son email dans la base SQLite
+        // getting the name and email of the user
         const utilisateur = database.prepare(`
             SELECT nom, email
             FROM utilisateur
             WHERE id_utilisateur = ?
         `).get(idUtilisateur);
 
-        // Vérifier que l'utilisateur existe
+        // check if the user exist
         if (!utilisateur) {
             return response.status(404).send("Utilisateur introuvable");
         }
 
-        // Afficher la page profil avec les données récupérées
+        // display the page with the infos
         response.render("profil", {
             utilisateur: utilisateur
         });
