@@ -1,6 +1,7 @@
 import { openCreateModal, openEditModal } from './activityModal.js';
 import { openAgendaModal } from './agendaModal.js';
 
+
 export function getScrollTime() {
   const h = Math.max(new Date().getHours() - 1, 0);
   return `${String(h).padStart(2, '0')}:00:00`;
@@ -14,20 +15,47 @@ export function initAgendaPanel(calendar, panelId, agendas){
     agendas.forEach(r => addAgendaToPanel(calendar, panel, r));
 }
 
+//RRULE match frequence
+const RRULE_FREQ = { quotidien: 'daily', hebdomadaire: 'weekly', mensuel: 'monthly' };
+
+//Transform a date into the current ISO
+function toLocalIso(date) {
+  const p = n => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}`
+    + `T${p(date.getHours())}:${p(date.getMinutes())}:${p(date.getSeconds())}`;
+}
+
 /**
  * Parser for fullcalendar API
  */
 function transformEvent(activite) {
-  return {
+  const event = {
     id: String(activite.idActivite),
     title: activite.titre,
     start: activite.debut,
     end: activite.fin,
     extendedProps: {
       lieu: activite.lieu,
-      description: activite.description
+      description: activite.description,
+      frequence: activite.frequence,
+      finRecurrence: activite.finRecurrence,
+      debut: activite.debut,
+      fin: activite.fin
     }
   };
+  if ( !activite.frequence ){
+    event.start = activite.debut;
+    event.end = activite.fin;
+    return event;
+  }
+  const debut = new Date(activite.debut);
+  event.rrule = { freq: RRULE_FREQ[activite.frequence], dtstart: toLocalIso(debut) };
+  if (activite.finRecurrence) {
+    event.rrule.until = `${activite.finRecurrence}T23:59:59`;
+  }
+  event.duration = { milliseconds: new Date(activite.fin) - debut };
+  event.editable = false;
+  return event;
 }
 
 /**
