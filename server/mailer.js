@@ -3,6 +3,10 @@ import nodemailer from "nodemailer";
 let transporterPromise = null;
 
 async function createTransporter() {
+    // for test purpose
+    if (process.env.MAIL_MODE === "console") {
+        return nodemailer.createTransport({ jsonTransport: true });
+    }
     try {
         const account = await nodemailer.createTestAccount();
         return nodemailer.createTransport({
