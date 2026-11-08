@@ -19,7 +19,7 @@ async function createTransporter() {
 
 function getTransporter() {
     if (transporterPromise === null) {
-        transporterPromise = buildTransporter();
+        transporterPromise = createTransporter();
     }
     return transporterPromise;
 }
