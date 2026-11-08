@@ -18,7 +18,7 @@ router.get("/forget", function (request, response) {
     response.render("forget");
 });
 router.get("/reset", function (request, response) {
-    response.render("forget");
+    response.render("reset");
 });
 router.get("/profil", requireLogin, function (request, response) {
 
