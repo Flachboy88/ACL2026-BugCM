@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Renitialiser le mot de passe - Agenda BugCM</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="register">
+    
+    <%- include('partials/header') %>
+
+    <div id="auth_container">
+        <div class="auth">
+            <form id="form-reset">
+                <h2>Renitialiser le mot-de-passe</h2>
+                <div class="field">
+                    <label for="reset-password1">Nouveau mot de passe</label>
+                    <input id="register-password1" type="password" name="pwd" placeholder="pwd" required autocomplete="new-password">
+                </div>
+                <div class="field">
+                    <label for="reset-password2">Confirmer le nouveau mot de passe</label>
+                    <input id="register-password2" type="password" name="pwd2" placeholder="pwd" required autocomplete="new-password">
+                </div>
+                <p id="reset-erreur" class="erreur"></p>
+                <p id="reset-message" class="message"></p>
+                <input type="submit" value="Changer le mot de passe" class="bouton">
+            </form>
+            <p class="switch"><a href="/login">Retour à la connexion</a></p>
+        </div>
+    </div>
+    
+    <script src="/js/resetPWD.js"></script>
+
+</body>
+</html>
