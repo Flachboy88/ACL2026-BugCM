@@ -19,6 +19,40 @@ function hashToken(token) {
     return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+
+
+// Sanitize username to prevent html interpreter
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function resetMailHtml(nom, lien) {
+    return `
+<div style="background:#f5f7fa;padding:24px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1f2937;">
+  <div style="max-width:480px;margin:0 auto;">
+    <h1 style="text-align:center;font-size:24px;margin:0 0 20px;">Agenda BugCM</h1>
+    <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:32px;">
+      <h2 style="font-size:20px;margin:0 0 16px;">Réinitialisation du mot de passe</h2>
+      <p style="margin:0 0 12px;line-height:1.5;">Bonjour ${escapeHtml(nom)},</p>
+      <p style="margin:0 0 24px;line-height:1.5;">Vous avez demandé à choisir un nouveau mot de passe. Ce lien est valable 1 heure.</p>
+      <div style="text-align:center;margin:0 0 24px;">
+        <a href="${escapeHtml(lien)}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:12px 24px;border-radius:8px;">Changer mon mot de passe</a>
+      </div>
+      <p style="margin:0 0 8px;font-size:13px;color:#6b7280;">Le bouton ne fonctionne pas ? Copiez cette adresse dans votre navigateur :</p>
+      <p style="margin:0;font-size:13px;word-break:break-all;"><a href="${escapeHtml(lien)}" style="color:#2563eb;">${escapeHtml(lien)}</a></p>
+    </div>
+    <p style="text-align:center;font-size:12px;color:#6b7280;margin:16px 0 0;">Si vous n'êtes pas à l'origine de cette demande, ignorez ce message : votre mot de passe ne sera pas modifié.</p>
+  </div>
+</div>`;
+}
+
+
+
 router.post("/login", function (request, response){
     // request.body is undefined when the client does not send JSON
     const {email, password} = request.body ?? {};
@@ -69,6 +103,7 @@ router.post("/forget", async function (request, response) {
     if (!isFilled(email)){
         return response.status(400).json({erreur: "Champs manquants"});
     }
+    let previewUrl = null; 
     const user = database.prepare("SELECT * FROM utilisateur WHERE email = ?").get(email);
     if(typeof(user) !== "undefined"){
         const token = crypto.randomBytes(32).toString("hex");
@@ -77,16 +112,18 @@ router.post("/forget", async function (request, response) {
         ).run(hashToken(token), Date.now() + RESET_LIFETIME, email);
 
         try {
-            await sendEMail({
+            const lien = `${BASE_URL}/reset?token=${token}`;
+            previewUrl = await sendEMail({
                 to: user.email,
                 subject: "Réinitialisation de votre mot de passe",
-                text: `Bonjour ${user.nom},\n\nPour choisir un nouveau mot de passe (lien valable 1 h) :\n${BASE_URL}/reset?token=${token}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.`
+                text: `Bonjour ${user.nom},\n\nPour choisir un nouveau mot de passe (lien valable 1 h) :\n${lien}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.`,
+                html: resetMailHtml(user.nom, lien)
             });
         } catch (error) {
             console.error("Envoi du mail de reset impossible : " + error.message);
         }
     }
-    return response.status(200).json({ message: "Si ce compte existe, un mail a été envoyé." });
+    return response.status(200).json({ message: "Si ce compte existe, un mail a été envoyé.", previewUrl });
 });
 
 router.post("/reset", function (request, response) {
