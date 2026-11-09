@@ -59,7 +59,13 @@ function applyMigration(fileName) {
         applyInTransaction();
         console.log("Migration applied: " + fileName);
     } catch (error) {
-        throw new Error("Migration " + fileName + " failed: " + error.message);
+        // Si la colonne existe déjà, on enregistre quand même la migration dans la table pour éviter de la réexécuter
+        if (error.message.includes("duplicate column name")) {
+            database.prepare("INSERT OR IGNORE INTO migration (file_name) VALUES (?)").run(fileName);
+            console.log("Migration ignorée (colonne déjà existante) : " + fileName);
+        } else {
+            throw new Error("Migration " + fileName + " failed: " + error.message);
+        }
     }
 }
 
