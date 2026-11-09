@@ -90,6 +90,18 @@ label {
     background-color: var(--primary-hover);
 }
 
+a.bouton {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    margin-top: 20px;
+    border-radius: 8px;
+}
+
+[hidden] {
+    display: none !important;
+}
+
 /* Hidden on screen but still read by screen readers */
 .sr-only {
     position: absolute;     /* 1. out of the flow: takes no space in the layout */

@@ -14,6 +14,12 @@ router.get("/login", redirectIfLogin, function (request, response) {
 router.get("/register", redirectIfLogin, function (request, response) {
     response.render("register");
 });
+router.get("/forget", function (request, response) {
+    response.render("forget");
+});
+router.get("/reset", function (request, response) {
+    response.render("reset");
+});
 router.get("/profil", requireLogin, function (request, response) {
 
     try {
