@@ -12,8 +12,21 @@ function isFilled(value) {
     return typeof value === "string" && value.trim() !== "";
 }
 
-const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
+const BASE_URL = process.env.BASE_URL;
 const RESET_LIFETIME = 60 * 60 * 1000; // 1 h
+
+// Adresse du serveur telle que le client l'a utilisée (IP du réseau local, localhost...)
+function adresseServeur(request) {
+    if (BASE_URL) {
+        return BASE_URL;
+    }
+    const host = request.get("host");
+    // Garde-fou : seulement un nom ou une IP, avec un port éventuel
+    if (typeof host !== "string" || !/^[A-Za-z0-9.-]+(:\d{1,5})?$/.test(host)) {
+        return "http://localhost:3000";
+    }
+    return request.protocol + "://" + host;
+}
 
 function hashToken(token) {
     return crypto.createHash("sha256").update(token).digest("hex");
@@ -31,7 +44,7 @@ function escapeHtml(value) {
         .replace(/'/g, "&#39;");
 }
 
-function resetMailHtml(nom, lien) {
+function resetMailHtml(nom, link) {
     return `
 <div style="background:#f5f7fa;padding:24px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1f2937;">
   <div style="max-width:480px;margin:0 auto;">
@@ -41,10 +54,10 @@ function resetMailHtml(nom, lien) {
       <p style="margin:0 0 12px;line-height:1.5;">Bonjour ${escapeHtml(nom)},</p>
       <p style="margin:0 0 24px;line-height:1.5;">Vous avez demandé à choisir un nouveau mot de passe. Ce lien est valable 1 heure.</p>
       <div style="text-align:center;margin:0 0 24px;">
-        <a href="${escapeHtml(lien)}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:12px 24px;border-radius:8px;">Changer mon mot de passe</a>
+        <a href="${escapeHtml(link)}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:12px 24px;border-radius:8px;">Changer mon mot de passe</a>
       </div>
       <p style="margin:0 0 8px;font-size:13px;color:#6b7280;">Le bouton ne fonctionne pas ? Copiez cette adresse dans votre navigateur :</p>
-      <p style="margin:0;font-size:13px;word-break:break-all;"><a href="${escapeHtml(lien)}" style="color:#2563eb;">${escapeHtml(lien)}</a></p>
+      <p style="margin:0;font-size:13px;word-break:break-all;"><a href="${escapeHtml(link)}" style="color:#2563eb;">${escapeHtml(link)}</a></p>
     </div>
     <p style="text-align:center;font-size:12px;color:#6b7280;margin:16px 0 0;">Si vous n'êtes pas à l'origine de cette demande, ignorez ce message : votre mot de passe ne sera pas modifié.</p>
   </div>
@@ -111,13 +124,14 @@ router.post("/forget", async function (request, response) {
             "UPDATE utilisateur SET reset_token_hash = ?, reset_expires = ? WHERE email = ?"
         ).run(hashToken(token), Date.now() + RESET_LIFETIME, email);
 
+        const link = `${adresseServeur(request)}/reset?token=${token}`;
+
         try {
-            const lien = `${BASE_URL}/reset?token=${token}`;
             previewUrl = await sendEMail({
                 to: user.email,
                 subject: "Réinitialisation de votre mot de passe",
-                text: `Bonjour ${user.nom},\n\nPour choisir un nouveau mot de passe (lien valable 1 h) :\n${lien}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.`,
-                html: resetMailHtml(user.nom, lien)
+                text: `Bonjour ${user.nom},\n\nPour choisir un nouveau mot de passe (lien valable 1 h) :\n${link}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.`,
+                html: resetMailHtml(user.nom, link)
             });
         } catch (error) {
             console.error("Envoi du mail de reset impossible : " + error.message);
