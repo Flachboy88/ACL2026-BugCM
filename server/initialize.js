@@ -9,6 +9,10 @@ const __dirname = path.dirname(__filename);
 
 // Chemin vers la base de données : /data/agenda.db
 const dbPath = path.join(__dirname, '..', 'data', 'agenda.db');
+const dataDir = path.join(__dirname, '..', 'data');
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+}
 const db = new Database(dbPath);
 
 // Permet d'utiliser les foreign keys 
