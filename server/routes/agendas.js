@@ -1,5 +1,6 @@
 import express from "express";
 import database from "../database.js";
+import { agendasAccessibles } from "../acces.js";
 
 const router = express.Router();
 
@@ -11,22 +12,24 @@ function getIdUtilisateur(response) {
     return response.locals.user.id;
 }
 
-// Une ligne de la table -> le JSON décrit dans conception.md
-function toJson(row) {
+// Une ligne de la table + le droit de l'utilisateur -> le JSON décrit dans conception.md
+function toJson(row, droit) {
     return {
         idAgenda: row.id_agenda,
         nom: row.nom,
         couleur: row.couleur,
-        description: row.description
+        description: row.description,
+        droit: droit
     };
 }
 
-// Liste des agendas de l'utilisateur connecté
+// Liste des agendas accessibles à l'utilisateur connecté : les siens et ceux partagés avec lui,
+// chacun avec son droit ('proprietaire', 'lecture' ou 'ecriture')
 router.get("/agendas", function (request, response) {
-    const rows = database.prepare(
-        "SELECT * FROM agenda WHERE id_utilisateur = ? ORDER BY nom"
-    ).all(getIdUtilisateur(response));
-    response.json(rows.map(toJson));
+    const rows = agendasAccessibles(getIdUtilisateur(response));
+    response.json(rows.map(function (row) {
+        return toJson(row, row.droit);
+    }));
 });
 
 // Créer un agenda pour l'utilisateur connecté
@@ -42,7 +45,8 @@ router.post("/agendas", function (request, response) {
         "INSERT INTO agenda (nom, couleur, description, id_utilisateur) VALUES (?, ?, ?, ?)"
     ).run(nom.trim(), couleur, description ?? null, getIdUtilisateur(response));
     const row = database.prepare("SELECT * FROM agenda WHERE id_agenda = ?").get(result.lastInsertRowid);
-    response.status(201).json(toJson(row));
+    // L'utilisateur vient de créer l'agenda : il en est le propriétaire
+    response.status(201).json(toJson(row, "proprietaire"));
 });
 
 // Modifier un agenda de l'utilisateur connecté (nom, couleur, description)
@@ -62,7 +66,8 @@ router.put("/agendas/:idAgenda", function (request, response) {
         return response.status(404).json({ erreur: "Agenda introuvable" });
     }
     const row = database.prepare("SELECT * FROM agenda WHERE id_agenda = ?").get(request.params.idAgenda);
-    response.json(toJson(row));
+    // Seul le propriétaire peut modifier l'agenda (WHERE ... id_utilisateur ci-dessus)
+    response.json(toJson(row, "proprietaire"));
 });
 
 export default router;
