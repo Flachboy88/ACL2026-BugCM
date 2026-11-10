@@ -55,6 +55,52 @@ describe("POST /register", function () {
         assert.deepEqual(await response.json(), { erreur: "Email déjà pris" });
     });
 
+    test("refuse un email mal formé (400)", async function () {
+        const response = await requete(url, "/register", {
+            method: "POST",
+            body: { userName: "Invalide", email: "email-invalide.fr", password: "secret01", confirmPassword: "secret01" }
+        });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { erreur: "Email mal formé" });
+    });
+
+    test("refuse un mot de passe de moins de 8 caractères (400)", async function () {
+        const response = await requete(url, "/register", {
+            method: "POST",
+            body: { userName: "Court", email: "court@test.fr", password: "sec1", confirmPassword: "sec1" }
+        });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { 
+            erreur: "Mot de passe mal formé (au moins 8 caractères, 1 lettre et 1 chiffre)" 
+        });
+    });
+
+    test("refuse un mot de passe sans chiffres (400)", async function () {
+        const response = await requete(url, "/register", {
+            method: "POST",
+            body: { userName: "SansChiffre", email: "sanschiffre@test.fr", password: "motdepassesanschiffre", confirmPassword: "motdepassesanschiffre" }
+        });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { 
+            erreur: "Mot de passe mal formé (au moins 8 caractères, 1 lettre et 1 chiffre)" 
+        });
+    });
+
+    test("refuse un mot de passe sans lettres (400)", async function () {
+        const response = await requete(url, "/register", {
+            method: "POST",
+            body: { userName: "SansLettre", email: "sanslettre@test.fr", password: "1234567890", confirmPassword: "1234567890" }
+        });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { 
+            erreur: "Mot de passe mal formé (au moins 8 caractères, 1 lettre et 1 chiffre)" 
+        });
+    });
+
     test("stocke le mot de passe haché, jamais en clair", async function () {
         await requete(url, "/register", {
             method: "POST",
