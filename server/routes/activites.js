@@ -1,5 +1,6 @@
 import express from "express";
 import database from "../database.js";
+import { droitSurAgenda, peutEcrire } from "../acces.js";
 
 const router = express.Router();
 
@@ -58,11 +59,11 @@ function checkActivite(titre, debutUtc, finUtc) {
     return null;
 }
 
-// Agenda demandé s'il appartient à l'utilisateur connecté, undefined sinon
-function getAgendaOfUser(idAgenda, response) {
+// Agenda d'une activité, ou undefined si l'activité n'existe pas
+function getAgendaDeActivite(idActivite) {
     return database.prepare(
-        "SELECT id_agenda FROM agenda WHERE id_agenda = ? AND id_utilisateur = ?"
-    ).get(idAgenda, response.locals.user.id);
+        "SELECT id_agenda FROM activite WHERE id_activite = ?"
+    ).get(idActivite);
 }
 
 /**
@@ -75,7 +76,8 @@ router.get("/agendas/:idAgenda/activites", function (request, response) {
     if (start === null || end === null) {
         return response.status(400).json({ erreur: "Période invalide" });
     }
-    if (getAgendaOfUser(request.params.idAgenda, response) === undefined) {
+    // Lire les activités : il faut au moins un droit de lecture sur l'agenda
+    if (droitSurAgenda(response.locals.user.id, request.params.idAgenda) === null) {
         return response.status(404).json({ erreur: "Agenda introuvable" });
     }
     // Activités qui chevauchent la période + séries qui peuvent la toucher
@@ -105,18 +107,21 @@ router.post("/agendas/:idAgenda/activites", function (request, response) {
         return response.status(400).json({ erreur: recurrence.erreur });
     }
 
-    // Test Existance d'un aganda (et qu'il appartient à l'utilisateur)
-    const agenda = getAgendaOfUser(request.params.idAgenda, response);
-    if (agenda === undefined) {
+    // Créer une activité : il faut voir l'agenda (sinon 404), et pouvoir y écrire (sinon 403)
+    const droit = droitSurAgenda(response.locals.user.id, request.params.idAgenda);
+    if (droit === null) {
         return response.status(404).json({ erreur: "Agenda introuvable" });
     }
-    
+    if (!peutEcrire(droit)) {
+        return response.status(403).json({ erreur: "Droit insuffisant" });
+    }
+
     // Insertation dans bd
     const result = database.prepare(
         "INSERT INTO activite (titre, debut, fin, lieu, description, frequence, fin_recurrence, id_agenda) " +
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         ).run(titre.trim(), debutUtc, finUtc, lieu ?? null, description ?? null,
-        recurrence.frequence, recurrence.finRecurrence, agenda.id_agenda);
+        recurrence.frequence, recurrence.finRecurrence, request.params.idAgenda);
     
     //Récupération de l'élément crée pour le renvoyer 
     const row = database.prepare("SELECT * FROM activite WHERE id_activite = ?").get(result.lastInsertRowid);
@@ -141,16 +146,24 @@ router.put("/activites/:idActivite", function (request, response) {
         return response.status(400).json({ erreur: recurrence.erreur });
     }
 
-    // On ne modifie que si l'activité est dans un agenda de l'utilisateur connecté
-    const result = database.prepare(
-        "UPDATE activite SET titre = ?, debut = ?, fin = ?, lieu = ?, description = ?, frequence = ?, fin_recurrence = ? " +
-        "WHERE id_activite = ? AND id_agenda IN (SELECT id_agenda FROM agenda WHERE id_utilisateur = ?)"
-    ).run(titre.trim(), debutUtc, finUtc, lieu ?? null, description ?? null,
-        recurrence.frequence, recurrence.finRecurrence,
-        request.params.idActivite, response.locals.user.id);
-    if (result.changes === 0) {
+    // On modifie seulement si l'activité existe et qu'on peut écrire sur son agenda
+    const activite = getAgendaDeActivite(request.params.idActivite);
+    if (activite === undefined) {
         return response.status(404).json({ erreur: "Activité introuvable" });
     }
+    const droit = droitSurAgenda(response.locals.user.id, activite.id_agenda);
+    if (droit === null) {
+        return response.status(404).json({ erreur: "Activité introuvable" });
+    }
+    if (!peutEcrire(droit)) {
+        return response.status(403).json({ erreur: "Droit insuffisant" });
+    }
+    database.prepare(
+        "UPDATE activite SET titre = ?, debut = ?, fin = ?, lieu = ?, description = ?, frequence = ?, fin_recurrence = ? " +
+        "WHERE id_activite = ?"
+    ).run(titre.trim(), debutUtc, finUtc, lieu ?? null, description ?? null,
+        recurrence.frequence, recurrence.finRecurrence,
+        request.params.idActivite);
 
     const row = database.prepare("SELECT * FROM activite WHERE id_activite = ?").get(request.params.idActivite);
     response.json(toJson(row));
@@ -160,14 +173,19 @@ router.put("/activites/:idActivite", function (request, response) {
  * Delete une activité de la DB en fonction de id_activite
  */
 router.delete("/activites/:idActivite", function (request, response) {
-    // On ne supprime que si l'activité est dans un agenda de l'utilisateur connecté
-    const result = database.prepare(
-        "DELETE FROM activite WHERE id_activite = ? AND id_agenda IN (SELECT id_agenda FROM agenda WHERE id_utilisateur = ?)"
-    ).run(request.params.idActivite, response.locals.user.id);
-    // Test de Changement -> 404 si rien n'a changé
-    if (result.changes === 0) {
+    // On supprime seulement si l'activité existe et qu'on peut écrire sur son agenda
+    const activite = getAgendaDeActivite(request.params.idActivite);
+    if (activite === undefined) {
         return response.status(404).json({ erreur: "Activité introuvable" });
     }
+    const droit = droitSurAgenda(response.locals.user.id, activite.id_agenda);
+    if (droit === null) {
+        return response.status(404).json({ erreur: "Activité introuvable" });
+    }
+    if (!peutEcrire(droit)) {
+        return response.status(403).json({ erreur: "Droit insuffisant" });
+    }
+    database.prepare("DELETE FROM activite WHERE id_activite = ?").run(request.params.idActivite);
     response.status(204).end(); // Succes
 });
 
