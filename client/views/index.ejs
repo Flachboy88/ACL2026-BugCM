@@ -43,6 +43,12 @@
                 </div>
                 <label for="agenda_description" class="sr-only">Description de l'agenda</label>
                 <input type="text" id="agenda_description" placeholder="Description (optionnel)">
+                <label for="share_agenda">Partager avec </label>
+                <input type="email" id="share_agenda" placeholder="Email (optionnel)">
+                <select id="rights">
+                    <option value="lecture">Lecture</option>
+                    <option value="ecriture">Écriture</option>
+                </select>
                 <button type="submit" class="bouton">Créer</button>
                 <p id="agenda_erreur" class="erreur"></p>
             </form>
