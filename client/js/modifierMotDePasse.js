@@ -21,13 +21,14 @@ boutonModifier.addEventListener("click", () => {
 // Sends the new password to the server
 formulaire.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const oldPwd = document.getElementById("ancien_mdp").value;
     const password = document.getElementById("nouveau_mdp").value;
     const confirmPassword = document.getElementById("confirmer_mdp").value;
 
     const reponse = await fetch("/api/mot-de-passe", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password, confirmPassword })
+        body: JSON.stringify({ oldPwd, password, confirmPassword })
     });
     const donnees = await reponse.json();
 

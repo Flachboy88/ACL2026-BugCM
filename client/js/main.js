@@ -42,6 +42,19 @@ form.addEventListener('submit', async function (event) {
         erreur.textContent = donnees.erreur;
         return;
     }
+
+    const reponseShare = await fetch(`/api/agendas/${donnees.idAgenda}/partages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            email: document.getElementById('share_agenda').value,
+            droit: document.getElementById('rights').value
+        })
+    });
+    const donneesShare = await reponseShare.json();
+    if (!reponseShare.ok) {
+        erreur.textContent = donneesShare.erreur + ". L'agenda a bien été créé quand même.";
+    }
     // Add an element on the calendar without re-charge everything
     addAgendaToPanel(calendar, document.getElementById('agenda_list'), toPanelAgenda(donnees));
     form.reset();

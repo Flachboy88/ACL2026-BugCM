@@ -6,6 +6,7 @@ import authRouter from "./routes/auth.js";
 import pagesRouter from "./routes/pages.js";
 import agendasRouter from "./routes/agendas.js";
 import activitesRouter from "./routes/activites.js";
+import partagesRouter from "./routes/partages.js";
 import profilRouter from "./routes/profil.js";
 
 const CLIENT_FOLDER = path.join(import.meta.dirname, "..", "client");
@@ -26,6 +27,7 @@ app.use(cookieParser()).use(auth);
 app.use("/api", requireApiLogin);
 app.use("/api", agendasRouter);
 app.use("/api", activitesRouter);
+app.use("/api", partagesRouter);
 app.use("/api", profilRouter);
 
 // Auth actions (login, register, logout) and EJS pages
