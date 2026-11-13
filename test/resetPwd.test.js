@@ -19,13 +19,13 @@ after(function () {
 const UNE_HEURE = 60 * 60 * 1000;
 let numero = 0;
 
-// Inscrit un utilisateur dont le mot de passe est "ancien" et renvoie son email
+// Inscrit un utilisateur dont le mot de passe est "ancien01" et renvoie son email
 async function creerCompte() {
     numero++;
     const email = "oubli" + numero + "@test.fr";
     const response = await requete(url, "/register", {
         method: "POST",
-        body: { userName: "Oubli " + numero, email: email, password: "ancien", confirmPassword: "ancien" }
+        body: { userName: "Oubli " + numero, email: email, password: "ancien01", confirmPassword: "ancien01" }
     });
     assert.equal(response.status, 200);
     return email;
@@ -104,12 +104,12 @@ describe("POST /reset", function () {
 
         const response = await requete(url, "/reset", {
             method: "POST",
-            body: { token: "token-valide", password: "nouveau", confirmPassword: "nouveau" }
+            body: { token: "token-valide", password: "nouveau1", confirmPassword: "nouveau1" }
         });
 
         assert.equal(response.status, 200);
-        const avecNouveau = await requete(url, "/login", { method: "POST", body: { email: email, password: "nouveau" } });
-        const avecAncien = await requete(url, "/login", { method: "POST", body: { email: email, password: "ancien" } });
+        const avecNouveau = await requete(url, "/login", { method: "POST", body: { email: email, password: "nouveau1" } });
+        const avecAncien = await requete(url, "/login", { method: "POST", body: { email: email, password: "ancien01" } });
         assert.equal(avecNouveau.status, 200);
         assert.equal(avecAncien.status, 401);
     });
@@ -120,12 +120,12 @@ describe("POST /reset", function () {
 
         await requete(url, "/reset", {
             method: "POST",
-            body: { token: "token-hash", password: "nouveau", confirmPassword: "nouveau" }
+            body: { token: "token-hash", password: "nouveau1", confirmPassword: "nouveau1" }
         });
         const utilisateur = lireUtilisateur(email);
 
-        assert.notEqual(utilisateur.mot_de_passe_hash, "nouveau");
-        assert.ok(bcrypt.compareSync("nouveau", utilisateur.mot_de_passe_hash));
+        assert.notEqual(utilisateur.mot_de_passe_hash, "nouveau1");
+        assert.ok(bcrypt.compareSync("nouveau1", utilisateur.mot_de_passe_hash));
         assert.equal(utilisateur.reset_token_hash, null);
         assert.equal(utilisateur.reset_expires, null);
     });
@@ -133,7 +133,7 @@ describe("POST /reset", function () {
     test("le lien ne sert qu'une fois", async function () {
         const email = await creerCompte();
         poserToken(email, "token-unique", Date.now() + UNE_HEURE);
-        const corps = { token: "token-unique", password: "nouveau", confirmPassword: "nouveau" };
+        const corps = { token: "token-unique", password: "nouveau1", confirmPassword: "nouveau1" };
 
         await requete(url, "/reset", { method: "POST", body: corps });
         const response = await requete(url, "/reset", { method: "POST", body: corps });
@@ -148,18 +148,18 @@ describe("POST /reset", function () {
 
         const response = await requete(url, "/reset", {
             method: "POST",
-            body: { token: "token-expire", password: "nouveau", confirmPassword: "nouveau" }
+            body: { token: "token-expire", password: "nouveau1", confirmPassword: "nouveau1" }
         });
 
         assert.equal(response.status, 400);
         assert.deepEqual(await response.json(), { erreur: "Lien invalide ou expiré" });
-        assert.ok(bcrypt.compareSync("ancien", lireUtilisateur(email).mot_de_passe_hash));
+        assert.ok(bcrypt.compareSync("ancien01", lireUtilisateur(email).mot_de_passe_hash));
     });
 
     test("refuse un token inconnu (400)", async function () {
         const response = await requete(url, "/reset", {
             method: "POST",
-            body: { token: "n-importe-quoi", password: "nouveau", confirmPassword: "nouveau" }
+            body: { token: "n-importe-quoi", password: "nouveau1", confirmPassword: "nouveau1" }
         });
 
         assert.equal(response.status, 400);
@@ -172,18 +172,18 @@ describe("POST /reset", function () {
 
         const response = await requete(url, "/reset", {
             method: "POST",
-            body: { token: "token-different", password: "nouveau", confirmPassword: "autre" }
+            body: { token: "token-different", password: "nouveau1", confirmPassword: "autre" }
         });
 
         assert.equal(response.status, 400);
         assert.deepEqual(await response.json(), { erreur: "Mot de passe différents" });
-        assert.ok(bcrypt.compareSync("ancien", lireUtilisateur(email).mot_de_passe_hash));
+        assert.ok(bcrypt.compareSync("ancien01", lireUtilisateur(email).mot_de_passe_hash));
     });
 
     test("refuse s'il manque un champ (400)", async function () {
         const response = await requete(url, "/reset", {
             method: "POST",
-            body: { token: "token", password: "nouveau" }
+            body: { token: "token", password: "nouveau1" }
         });
 
         assert.equal(response.status, 400);

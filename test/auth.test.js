@@ -16,7 +16,7 @@ describe("POST /register", function () {
     test("inscrit l'utilisateur et le connecte", async function () {
         const response = await requete(url, "/register", {
             method: "POST",
-            body: { userName: "Alice", email: "alice@test.fr", password: "secret", confirmPassword: "secret" }
+            body: { userName: "Alice", email: "alice@test.fr", password: "secret01", confirmPassword: "secret01" }
         });
 
         assert.equal(response.status, 200);
@@ -28,7 +28,7 @@ describe("POST /register", function () {
     test("refuse s'il manque un champ (400)", async function () {
         const response = await requete(url, "/register", {
             method: "POST",
-            body: { userName: "Bob", email: "bob@test.fr", password: "secret" }
+            body: { userName: "Bob", email: "bob@test.fr", password: "secret01" }
         });
 
         assert.equal(response.status, 400);
@@ -38,7 +38,7 @@ describe("POST /register", function () {
     test("refuse si les deux mots de passe sont différents (400)", async function () {
         const response = await requete(url, "/register", {
             method: "POST",
-            body: { userName: "Bob", email: "bob@test.fr", password: "secret", confirmPassword: "autre" }
+            body: { userName: "Bob", email: "bob@test.fr", password: "secret01", confirmPassword: "autre" }
         });
 
         assert.equal(response.status, 400);
@@ -46,7 +46,7 @@ describe("POST /register", function () {
     });
 
     test("refuse un email déjà utilisé (400)", async function () {
-        const compte = { userName: "Claire", email: "claire@test.fr", password: "secret", confirmPassword: "secret" };
+        const compte = { userName: "Claire", email: "claire@test.fr", password: "secret01", confirmPassword: "secret01" };
         await requete(url, "/register", { method: "POST", body: compte });
 
         const response = await requete(url, "/register", { method: "POST", body: compte });
@@ -58,7 +58,7 @@ describe("POST /register", function () {
     test("stocke le mot de passe haché, jamais en clair", async function () {
         await requete(url, "/register", {
             method: "POST",
-            body: { userName: "Hugo", email: "hugo@test.fr", password: "secret", confirmPassword: "secret" }
+            body: { userName: "Hugo", email: "hugo@test.fr", password: "secret01", confirmPassword: "secret01" }
         });
 
         const { mot_de_passe_hash } = database
@@ -66,9 +66,9 @@ describe("POST /register", function () {
             .get("hugo@test.fr");
 
         // Le mot de passe en clair ne doit jamais apparaître en base
-        assert.notEqual(mot_de_passe_hash, "secret");
+        assert.notEqual(mot_de_passe_hash, "secret01");
         // C'est bien un hash bcrypt valide pour ce mot de passe
-        assert.ok(bcrypt.compareSync("secret", mot_de_passe_hash));
+        assert.ok(bcrypt.compareSync("secret01", mot_de_passe_hash));
     });
 });
 
@@ -77,14 +77,14 @@ describe("POST /login", function () {
     before(async function () {
         await requete(url, "/register", {
             method: "POST",
-            body: { userName: "David", email: "david@test.fr", password: "secret", confirmPassword: "secret" }
+            body: { userName: "David", email: "david@test.fr", password: "secret01", confirmPassword: "secret01" }
         });
     });
 
     test("connecte avec le bon email et le bon mot de passe", async function () {
         const response = await requete(url, "/login", {
             method: "POST",
-            body: { email: "david@test.fr", password: "secret" }
+            body: { email: "david@test.fr", password: "secret01" }
         });
 
         assert.equal(response.status, 200);
@@ -95,7 +95,7 @@ describe("POST /login", function () {
     test("refuse un mauvais mot de passe (401)", async function () {
         const response = await requete(url, "/login", {
             method: "POST",
-            body: { email: "david@test.fr", password: "faux" }
+            body: { email: "david@test.fr", password: "faux0001" }
         });
 
         assert.equal(response.status, 401);

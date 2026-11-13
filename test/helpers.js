@@ -55,8 +55,8 @@ export async function creerUtilisateur(url) {
         body: {
             userName: "Utilisateur " + numeroUtilisateur,
             email: "utilisateur" + numeroUtilisateur + "@test.fr",
-            password: "motdepasse",
-            confirmPassword: "motdepasse"
+            password: "motdepasse1",
+            confirmPassword: "motdepasse1"
         }
     });
     if (response.status !== 200) {

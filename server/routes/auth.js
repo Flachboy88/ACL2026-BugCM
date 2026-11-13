@@ -64,14 +64,14 @@ function resetMailHtml(nom, link) {
 </div>`;
 }
 
-
-
 router.post("/login", function (request, response){
     // request.body is undefined when the client does not send JSON
     const {email, password} = request.body ?? {};
+
     if(!isFilled(email) || !isFilled(password)){
         return response.status(400).json({erreur: "Champs manquants"});
     }
+
     const user = database.prepare("SELECT * FROM utilisateur WHERE email = ?").get(email);
     if(typeof(user) === "undefined" || !bcrypt.compareSync(password, user.mot_de_passe_hash)){
         return response.status(401).json({erreur: "Identifiants incorrects"});
@@ -83,10 +83,28 @@ router.post("/login", function (request, response){
     }
 });
 
+// Validation du format d'email
+function isEmailValide(email) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+}
+
+// Validation de la force du mot de passe (8 caractères minimum, 1 lettre, 1 chiffre, caractère spécial optionnel)
+function isMdpValide(mdp) {
+    const mdpRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+    return mdpRegex.test(mdp);
+}
+
 router.post("/register", function (request, response){
     const {userName, email, password, confirmPassword} = request.body ?? {};
     if(!isFilled(userName) || !isFilled(email) || !isFilled(password) || !isFilled(confirmPassword)){
         return response.status(400).json({erreur: "Champs manquants"});
+    }
+        if (!isEmailValide(email)) {
+        return response.status(400).json({ erreur: "Email mal formé" });
+    }
+    if (!isMdpValide(password)) {
+        return response.status(400).json({ erreur: "Mot de passe mal formé (au moins 8 caractères, 1 lettre et 1 chiffre)" });
     }
     const userExists = database.prepare("SELECT email FROM utilisateur WHERE email = ?").get(email);
     if(typeof(userExists) === "undefined"){
@@ -144,6 +162,9 @@ router.post("/reset", function (request, response) {
     const {token, password, confirmPassword} = request.body ?? {};
     if (!isFilled(token) || !isFilled(password) || !isFilled(confirmPassword)) {
         return response.status(400).json({erreur: "Champs manquants"});
+    }
+    if (!isMdpValide(password)) {
+        return response.status(400).json({ erreur: "Mot de passe mal formé (au moins 8 caractères, 1 lettre et 1 chiffre)" });
     }
     if (password !== confirmPassword) {
         return response.status(400).json({erreur: "Mot de passe différents"});

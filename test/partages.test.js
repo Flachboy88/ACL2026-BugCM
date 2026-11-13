@@ -16,7 +16,7 @@ async function creerUtilisateur(nom) {
     const email = "partage" + numero + "@test.fr";
     const response = await requete(url, "/register", {
         method: "POST",
-        body: { userName: nom, email: email, password: "motdepasse", confirmPassword: "motdepasse" }
+        body: { userName: nom, email: email, password: "motdepasse1", confirmPassword: "motdepasse1" }
     });
     if (response.status !== 200) {
         throw new Error("Inscription impossible : " + response.status);
