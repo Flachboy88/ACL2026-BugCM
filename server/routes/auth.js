@@ -91,7 +91,7 @@ function isEmailValide(email) {
 
 // Validation de la force du mot de passe (8 caractères minimum, 1 lettre, 1 chiffre)
 function isMdpValide(mdp) {
-    const mdpRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    const mdpRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
     return mdpRegex.test(mdp);
 }
 
