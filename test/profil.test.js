@@ -7,7 +7,7 @@ import { demarrerServeur, requete, lireCookie, creerUtilisateur } from "./helper
 
 // Serveur de test pour ce fichier, sur un port libre
 const { url, arreter } = await demarrerServeur();
-const MDP_INITIAL = "motdepasse";
+const MDP_INITIAL = "motdepasse1";
 after(function () {
     arreter();
 });
@@ -19,7 +19,7 @@ describe("PUT /api/mot-de-passe", function () {
         const response = await requete(url, "/api/mot-de-passe", {
             method: "PUT",
             cookie: cookie,
-            body: { oldPwd: MDP_INITIAL, password: "nouveau", confirmPassword: "nouveau" }
+            body: { oldPwd: MDP_INITIAL, password: "nouveau1", confirmPassword: "nouveau1" }
         });
 
         assert.equal(response.status, 200);
@@ -28,7 +28,7 @@ describe("PUT /api/mot-de-passe", function () {
         const { mot_de_passe_hash } = database
             .prepare("SELECT mot_de_passe_hash FROM utilisateur WHERE id_utilisateur = ?")
             .get(1);
-        assert.ok(bcrypt.compareSync("nouveau", mot_de_passe_hash));
+        assert.ok(bcrypt.compareSync("nouveau1", mot_de_passe_hash));
     });
 
     test("refuse s'il manque un champ (400)", async function () {
@@ -37,7 +37,7 @@ describe("PUT /api/mot-de-passe", function () {
         const response = await requete(url, "/api/mot-de-passe", {
             method: "PUT",
             cookie: cookie,
-            body: { oldPwd: MDP_INITIAL, password: "nouveau" }
+            body: { oldPwd: MDP_INITIAL, password: "nouveau1" }
         });
 
         assert.equal(response.status, 400);
@@ -50,7 +50,7 @@ describe("PUT /api/mot-de-passe", function () {
         const response = await requete(url, "/api/mot-de-passe", {
             method: "PUT",
             cookie: cookie,
-            body: { password: "nouveau", confirmPassword: "nouveau" }
+            body: { password: "nouveau1", confirmPassword: "nouveau1" }
         });
 
         assert.equal(response.status, 400);
@@ -63,7 +63,7 @@ describe("PUT /api/mot-de-passe", function () {
         const response = await requete(url, "/api/mot-de-passe", {
             method: "PUT",
             cookie: cookie,
-            body: { oldPwd: MDP_INITIAL, password: "nouveau", confirmPassword: "autre" }
+            body: { oldPwd: MDP_INITIAL, password: "nouveau1", confirmPassword: "autre01" }
         });
 
         assert.equal(response.status, 400);
@@ -79,7 +79,7 @@ describe("PUT /api/mot-de-passe", function () {
         const response = await requete(url, "/api/mot-de-passe", {
             method: "PUT",
             cookie: cookie,
-            body: { oldPwd: "mauvais", password: "nouveau", confirmPassword: "nouveau" }
+            body: { oldPwd: "mauvais", password: "nouveau1", confirmPassword: "nouveau1" }
         });
 
         assert.equal(response.status, 401);
@@ -94,7 +94,7 @@ describe("PUT /api/mot-de-passe", function () {
     test("refuse un visiteur non connecté (401)", async function () {
         const response = await requete(url, "/api/mot-de-passe", {
             method: "PUT",
-            body: { password: "nouveau", confirmPassword: "nouveau" }
+            body: { password: "nouveau1", confirmPassword: "nouveau1" }
         });
 
         assert.equal(response.status, 401);
