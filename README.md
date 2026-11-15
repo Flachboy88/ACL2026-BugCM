@@ -85,7 +85,7 @@ Un **serveur unique** (Express) assure deux rôles, sur des routes distinctes :
 │   ├── server.js           # Point d'entrée : prépare la base puis démarre le serveur (port 3000)
 │   ├── app.js              # Application Express : assemble les middlewares et les routes, sans la démarrer
 │   ├── middlewares/        # Middlewares partagés : auth.js (lecture du jeton, protection des routes)
-│   ├── routes/             # Routes : auth.js (connexion), pages.js (pages EJS), agendas.js, activites.js
+│   ├── routes/             # Routes : auth.js (connexion, reset mdp), pages.js (pages EJS), agendas.js, activites.js, partages.js, profil.js
 │   ├── database.js         # Connexion à la base SQLite
 │   ├── migrations.js       # Application des migrations au démarrage
 │   ├── resetDatabase.js    # Effacement de la base locale (npm run db:reset)
@@ -127,9 +127,9 @@ Les tables sont créées et modifiées par des **migrations** (fichiers SQL num�
 
 ### Fonctionnalités avancées
 
-- [ ] Rendez-vous récurrents
-- [ ] Recherche de rendez-vous par différents critères
-- [ ] Partage d'agendas entre utilisateurs (et annulation du partage)
+- [ ] Rendez-vous récurrents *(backend fait)*
+- [ ] Recherche de rendez-vous par différents critères *(backend fait, front en cours)*
+- [x] Partage d'agendas entre utilisateurs (et annulation du partage)
 - [ ] Import / export d'un agenda (format à définir)
 
 ### Fonctionnalités supplémentaires
@@ -151,19 +151,33 @@ Les données sont échangées en JSON. En cas d'erreur, la réponse contient `{ 
 | `POST` | `/register` | Crée un compte (`userName`, `email`, `password`, `confirmPassword`) et connecte l'utilisateur |
 | `POST` | `/login` | Connecte l'utilisateur (`email`, `password`) |
 | `POST` | `/logout` | Ferme la session (efface le cookie) et redirige vers `/login` |
+| `POST` | `/forget` | Envoie un mail de réinitialisation de mot de passe (`email`) |
+| `POST` | `/reset` | Choisit un nouveau mot de passe depuis le lien reçu (`token`, `password`, `confirmPassword`) |
+| `PUT` | `/api/mot-de-passe` | Change le mot de passe de l'utilisateur connecté (`oldPwd`, `password`, `confirmPassword`) |
 
 ### Agendas et activités
 
-Toutes les routes `/api/...` demandent d'être connecté : sinon elles répondent `401`. Chaque utilisateur ne voit et ne modifie que ses propres agendas.
+Toutes les routes `/api/...` demandent d'être connecté : sinon elles répondent `401`. Chaque utilisateur voit ses propres agendas et ceux qu'on lui a partagés ; il ne peut écrire que là où il a le droit `ecriture` (ou `proprietaire`).
 
 | Méthode | Route | Description |
 |---|---|---|
-| `GET` | `/api/agendas` | Liste les agendas de l'utilisateur connecté |
+| `GET` | `/api/agendas` | Liste les agendas de l'utilisateur (les siens + ceux partagés avec lui), avec son `droit` sur chacun |
 | `POST` | `/api/agendas` | Crée un agenda (`nom`, `couleur` au format `#RRGGBB`, `description` facultative) |
 | `GET` | `/api/agendas/:idAgenda/activites?start=...&end=...` | Liste les activités de l'agenda qui chevauchent la période donnée |
 | `POST` | `/api/agendas/:idAgenda/activites` | Crée une activité (`titre`, `debut`, `fin`, `lieu` et `description` facultatifs) |
 | `PUT` | `/api/activites/:idActivite` | Modifie une activité (mêmes champs, sans changer d'agenda) |
 | `DELETE` | `/api/activites/:idActivite` | Supprime une activité |
+| `GET` | `/api/activites/recherche?q=...&start=...&end=...&idAgenda=...` | Cherche dans les activités accessibles ; tous les paramètres sont facultatifs, `idAgenda` peut être répété pour plusieurs agendas |
+
+### Partage d'agendas
+
+Seul le propriétaire gère les partages de son agenda. Un destinataire peut retirer son propre accès.
+
+| Méthode | Route | Description |
+|---|---|---|
+| `POST` | `/api/agendas/:idAgenda/partages` | Partage l'agenda avec un utilisateur (`email`, `droit` : `lecture` ou `ecriture`), ou met à jour son droit |
+| `GET` | `/api/agendas/:idAgenda/partages` | Liste les partages de l'agenda (propriétaire uniquement) |
+| `DELETE` | `/api/agendas/:idAgenda/partages/:idUtilisateur` | Retire un partage (le propriétaire, ou l'utilisateur lui-même) |
 
 ### Pages Web
 

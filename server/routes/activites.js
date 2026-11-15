@@ -1,6 +1,6 @@
 import express from "express";
 import database from "../database.js";
-import { droitSurAgenda, peutEcrire } from "../acces.js";
+import { droitSurAgenda, peutEcrire, agendasAccessibles } from "../acces.js";
 
 const router = express.Router();
 
@@ -65,6 +65,65 @@ function getAgendaDeActivite(idActivite) {
         "SELECT id_agenda FROM activite WHERE id_activite = ?"
     ).get(idActivite);
 }
+
+/**
+ * Recherche dans les activités accessibles (ses agendas + agendas partagés)
+ * GET /activites/recherche?q=...&start=...&end=...&idAgenda=...
+ * Tous les paramètres sont facultatifs. idAgenda peut être répété pour chercher
+ * dans plusieurs agendas à la fois (?idAgenda=1&idAgenda=3).
+ */
+router.get("/activites/recherche", function (request, response) {
+    // On ne cherche que dans les agendas auxquels l'utilisateur a accès
+    const accessibles = agendasAccessibles(response.locals.user.id).map(function (a) {
+        return a.id_agenda;
+    });
+    if (accessibles.length === 0) {
+        return response.json([]);
+    }
+
+    // Filtre agenda : un ou plusieurs ?idAgenda=1&idAgenda=3 (Express donne une string ou un tableau).
+    // Chaque agenda demandé doit faire partie des agendas accessibles.
+    let ids = accessibles;
+    if (request.query.idAgenda !== undefined) {
+        const demandes = [].concat(request.query.idAgenda).map(Number);
+        if (demandes.some(function (id) { return !accessibles.includes(id); })) {
+            return response.status(404).json({ erreur: "Agenda introuvable" });
+        }
+        ids = demandes;
+    }
+
+    const conditions = ["id_agenda IN (" + ids.map(function () { return "?"; }).join(", ") + ")"];
+    const params = ids.slice();
+
+    // Mots-clés : titre, lieu ou description
+    const q = request.query.q;
+    if (typeof q === "string" && q.trim() !== "") {
+        const motif = "%" + q.trim() + "%";
+        conditions.push("(titre LIKE ? OR lieu LIKE ? OR description LIKE ?)");
+        params.push(motif, motif, motif);
+    }
+
+    // Période : on ne garde que les activités qui chevauchent [start, end[
+    const start = toUtc(request.query.start);
+    const end = toUtc(request.query.end);
+    if ((request.query.start !== undefined && start === null) ||
+        (request.query.end !== undefined && end === null)) {
+        return response.status(400).json({ erreur: "Période invalide" });
+    }
+    if (start !== null) {
+        conditions.push("fin > ?");
+        params.push(start);
+    }
+    if (end !== null) {
+        conditions.push("debut < ?");
+        params.push(end);
+    }
+
+    const rows = database.prepare(
+        "SELECT * FROM activite WHERE " + conditions.join(" AND ") + " ORDER BY debut"
+    ).all(...params);
+    response.json(rows.map(toJson));
+});
 
 /**
  * Recupère les activitées de l'agenda
