@@ -94,6 +94,51 @@ describe("GET /api/activites/recherche", function () {
     });
 });
 
+describe("GET /api/activites/recherche — filtre multi-agenda", function () {
+    let cookie;
+    let agendaA;
+    let agendaB;
+    let agendaC;
+
+    before(async function () {
+        cookie = await creerUtilisateur(url);
+        agendaA = await creerAgenda(url, cookie, "A");
+        agendaB = await creerAgenda(url, cookie, "B");
+        agendaC = await creerAgenda(url, cookie, "C");
+        await creerActivite(cookie, agendaA.idAgenda, {
+            titre: "ActA", debut: "2026-10-15T08:00:00Z", fin: "2026-10-15T09:00:00Z"
+        });
+        await creerActivite(cookie, agendaB.idAgenda, {
+            titre: "ActB", debut: "2026-10-16T08:00:00Z", fin: "2026-10-16T09:00:00Z"
+        });
+        await creerActivite(cookie, agendaC.idAgenda, {
+            titre: "ActC", debut: "2026-10-17T08:00:00Z", fin: "2026-10-17T09:00:00Z"
+        });
+    });
+
+    test("cherche dans plusieurs agendas cochés", async function () {
+        const activites = await rechercher(cookie,
+            "?idAgenda=" + agendaA.idAgenda + "&idAgenda=" + agendaC.idAgenda);
+        const titres = activites.map(function (a) { return a.titre; });
+        assert.deepEqual(titres, ["ActA", "ActC"]);
+    });
+
+    test("un seul agenda coché : ne renvoie que lui", async function () {
+        const activites = await rechercher(cookie, "?idAgenda=" + agendaB.idAgenda);
+        assert.equal(activites.length, 1);
+        assert.equal(activites[0].titre, "ActB");
+    });
+
+    test("404 si un des agendas demandés n'est pas accessible", async function () {
+        const autre = await creerUtilisateur(url);
+        const agendaAutre = await creerAgenda(url, autre, "Autre");
+        const response = await requete(url,
+            "/api/activites/recherche?idAgenda=" + agendaA.idAgenda + "&idAgenda=" + agendaAutre.idAgenda,
+            { cookie: cookie });
+        assert.equal(response.status, 404);
+    });
+});
+
 describe("Recherche et droits d'accès", function () {
     test("ne renvoie pas les activités d'un agenda d'un autre utilisateur", async function () {
         const alice = await creerUtilisateurAvecEmail("Alice");

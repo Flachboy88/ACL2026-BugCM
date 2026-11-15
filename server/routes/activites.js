@@ -69,7 +69,8 @@ function getAgendaDeActivite(idActivite) {
 /**
  * Recherche dans les activités accessibles (ses agendas + agendas partagés)
  * GET /activites/recherche?q=...&start=...&end=...&idAgenda=...
- * Tous les paramètres sont facultatifs.
+ * Tous les paramètres sont facultatifs. idAgenda peut être répété pour chercher
+ * dans plusieurs agendas à la fois (?idAgenda=1&idAgenda=3).
  */
 router.get("/activites/recherche", function (request, response) {
     // On ne cherche que dans les agendas auxquels l'utilisateur a accès
@@ -80,14 +81,15 @@ router.get("/activites/recherche", function (request, response) {
         return response.json([]);
     }
 
-    // Filtre agenda : s'il est donné, il doit faire partie des agendas accessibles
+    // Filtre agenda : un ou plusieurs ?idAgenda=1&idAgenda=3 (Express donne une string ou un tableau).
+    // Chaque agenda demandé doit faire partie des agendas accessibles.
     let ids = accessibles;
     if (request.query.idAgenda !== undefined) {
-        const idAgenda = Number(request.query.idAgenda);
-        if (!accessibles.includes(idAgenda)) {
+        const demandes = [].concat(request.query.idAgenda).map(Number);
+        if (demandes.some(function (id) { return !accessibles.includes(id); })) {
             return response.status(404).json({ erreur: "Agenda introuvable" });
         }
-        ids = [idAgenda];
+        ids = demandes;
     }
 
     const conditions = ["id_agenda IN (" + ids.map(function () { return "?"; }).join(", ") + ")"];
