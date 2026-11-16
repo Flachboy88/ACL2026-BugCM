@@ -1,16 +1,18 @@
-const API_URL = "/activites/recherche";
+const API_URL = "/api/activites/recherche";
 
 /**
  * Recupère les agendas selectionnées depuis index.ejs
  */
-function getAgendasSelectionnes() {
-    // Permet de relancer quand l'utilisateur selectionne un agenda
+function getAgendasSelectionnes(agendaListEl) {
     if (!agendaListEl) return [];
-    // Recherche dans la div agenda_list de index.ejs 
-    const checkboxes = document.querySelectorAll('#agenda_list input[type="checkbox"]:checked');
-    return Array.from(checkboxes)
-        .map((cb) => cb.value || cb.dataset.id)
-        .filter(Boolean);
+    const ids = [];
+    agendaListEl.querySelectorAll(".agenda").forEach((div) => {
+        const cb = div.querySelector('input[type="checkbox"]');
+        if (cb && cb.checked && /^\d+$/.test(div.id)) {
+            ids.push(div.id);
+        }
+    });
+    return ids;
 }
 
 /**
@@ -52,7 +54,7 @@ async function rechercherActivites({ q, start, end, idAgendas = [] }) {
     const data = await response.json();
 
     if (!response.ok) {
-        // Gère 400 ("Période invalide") et 404 ("Agenda introuvable")
+        // Gère 400 ("Période invalide") et 404 ("Agenda introuvable 1")
         throw new Error(data.erreur || "Erreur lors de la recherche");
     }
 
@@ -132,12 +134,21 @@ export function initSearch(calendar = null, agendaListId = "agenda_list") {
             return;
         }
 
+        const totalAgendas = agendaListEl?.querySelectorAll(".agenda").length ?? 0;
+        const idAgendas = getAgendasSelectionnes(agendaListEl);
+
+        // Si des agendas existent mais qu'aucun n'est coché, on n'affiche rien
+        if (totalAgendas > 0 && idAgendas.length === 0) {
+            afficherResultats([], resultsContainer, calendar);
+            return;
+        }
+
         try {
             const activites = await rechercherActivites({
                 q,
                 start,
                 end,
-                idAgendas: getAgendasSelectionnes()
+                idAgendas: getAgendasSelectionnes(agendaListEl)
             });
 
             if (activites !== null) {
