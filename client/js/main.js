@@ -1,4 +1,5 @@
 import { createCalendar, initAgendaPanel, addAgendaToPanel, mobile } from './calendar.js';
+import { initSearch } from "./searchHandler.js";
 
 function toPanelAgenda(agenda) {
     return { id: String(agenda.idAgenda), title: agenda.nom, eventColor: agenda.couleur, description: agenda.description };
@@ -21,6 +22,7 @@ calendar.render();
 const reponse = await fetch('/api/agendas');
 const agendas = await reponse.json();
 initAgendaPanel(calendar, 'agenda_list', agendas.map(toPanelAgenda));
+initSearch(calendar, 'agenda_list'); // Recherche d'activite
 
 const form = document.getElementById('agenda_form');
 form.addEventListener('submit', async function (event) {
