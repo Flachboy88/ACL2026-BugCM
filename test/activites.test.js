@@ -416,3 +416,152 @@ describe("GET : séries récurrentes qui touchent la période", function () {
         assert.ok(!titres.includes("Série finie"));
     });
 });
+
+describe("GET /api/activites/recherche", function () {
+    let cookieRecherche;
+    let agendaTravail;
+    let agendaPerso;
+    let agendaBob;
+
+    before(async function () {
+        cookieRecherche = await creerUtilisateur(url);
+        agendaTravail = await creerAgenda(url, cookieRecherche, "Travail");
+        agendaPerso = await creerAgenda(url, cookieRecherche, "Perso");
+        agendaBob = await creerAgenda(url, cookieBob, "Agenda Bob");
+
+        // Activités de l'utilisateur de test sur deux agendas différents
+        await requete(url, "/api/agendas/" + agendaTravail.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieRecherche,
+            body: {
+                titre: "Réunion équipe",
+                debut: "2026-11-10T09:00:00Z",
+                fin: "2026-11-10T10:00:00Z",
+                lieu: "Salle A",
+                description: "Point hebdomadaire"
+            }
+        });
+        await requete(url, "/api/agendas/" + agendaTravail.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieRecherche,
+            body: {
+                titre: "Déjeuner client",
+                debut: "2026-11-12T12:00:00Z",
+                fin: "2026-11-12T13:30:00Z",
+                lieu: "Bistrot",
+                description: "Préparation Réunion"
+            }
+        });
+        await requete(url, "/api/agendas/" + agendaPerso.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieRecherche,
+            body: {
+                titre: "Dentiste",
+                debut: "2026-11-11T14:00:00Z",
+                fin: "2026-11-11T15:00:00Z",
+                lieu: "Cabinet Lyon",
+                description: "Contrôle annuel"
+            }
+        });
+
+        // Activité de Bob (ne doit jamais remonter)
+        await requete(url, "/api/agendas/" + agendaBob.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieBob,
+            body: {
+                titre: "Réunion secrète",
+                debut: "2026-11-10T09:00:00Z",
+                fin: "2026-11-10T10:00:00Z"
+            }
+        });
+    });
+
+    test("renvoie toutes les activités accessibles triées par début sans filtre", async function () {
+        const response = await requete(url, "/api/activites/recherche", { cookie: cookieRecherche });
+        const activites = await response.json();
+
+        assert.equal(response.status, 200);
+        assert.deepEqual(
+            activites.map(function (a) { return a.titre; }),
+            ["Réunion équipe", "Dentiste", "Déjeuner client"]
+        );
+    });
+
+    test("filtre par mot-clé q dans le titre, le lieu ou la description", async function () {
+        const repMot = await requete(url, "/api/activites/recherche?q=Réunion", { cookie: cookieRecherche });
+        assert.deepEqual(
+            (await repMot.json()).map(function (a) { return a.titre; }),
+            ["Réunion équipe", "Déjeuner client"]
+        );
+
+        const repLieu = await requete(url, "/api/activites/recherche?q=lyon", { cookie: cookieRecherche });
+        assert.deepEqual(
+            (await repLieu.json()).map(function (a) { return a.titre; }),
+            ["Dentiste"]
+        );
+    });
+
+    test("filtre sur un ou plusieurs idAgenda", async function () {
+        const repUn = await requete(
+            url,
+            `/api/activites/recherche?idAgenda=${agendaPerso.idAgenda}`,
+            { cookie: cookieRecherche }
+        );
+        assert.deepEqual(
+            (await repUn.json()).map(function (a) { return a.titre; }),
+            ["Dentiste"]
+        );
+
+        const repPlusieurs = await requete(
+            url,
+            `/api/activites/recherche?idAgenda=${agendaTravail.idAgenda}&idAgenda=${agendaPerso.idAgenda}`,
+            { cookie: cookieRecherche }
+        );
+        assert.equal((await repPlusieurs.json()).length, 3);
+    });
+
+    test("filtre par période [start, end[ en gardant les activités qui chevauchent", async function () {
+        const response = await requete(
+            url,
+            "/api/activites/recherche?start=2026-11-10T09:30:00Z&end=2026-11-11T14:30:00Z",
+            { cookie: cookieRecherche }
+        );
+
+        assert.deepEqual(
+            (await response.json()).map(function (a) { return a.titre; }),
+            ["Réunion équipe", "Dentiste"]
+        );
+    });
+
+    test("renvoie [] si l'utilisateur n'a aucun agenda accessible", async function () {
+        const cookieSansAgenda = await creerUtilisateur(url);
+        const response = await requete(url, "/api/activites/recherche", { cookie: cookieSansAgenda });
+
+        assert.equal(response.status, 200);
+        assert.deepEqual(await response.json(), []);
+    });
+
+    test("répond 404 si un idAgenda demandé appartient à un autre utilisateur", async function () {
+        const response = await requete(
+            url,
+            `/api/activites/recherche?idAgenda=${agendaBob.idAgenda}`,
+            { cookie: cookieRecherche }
+        );
+
+        assert.equal(response.status, 404);
+        assert.deepEqual(await response.json(), { erreur: "Agenda introuvable" });
+    });
+
+    test("refuse une période invalide (400)", async function () {
+        const response = await requete(url, "/api/activites/recherche?start=invalide", { cookie: cookieRecherche });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { erreur: "Période invalide" });
+    });
+
+    test("répond 401 sans être connecté", async function () {
+        const response = await requete(url, "/api/activites/recherche");
+
+        assert.equal(response.status, 401);
+    });
+});
