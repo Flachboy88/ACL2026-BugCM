@@ -78,9 +78,17 @@
                 </div>
                 <h2 id="calendar_month"></h2>
                 <div id="search_container" class="search_wrapper">
-                    <input type="search" id="Recherche" placeholder="Rechercher une activité...">
-                    <input type="date" id="search_start" aria-label="Date de début">
-                    <input type="date" id="search_end" aria-label="Date de fin">
+                    <input type="search" id="Recherche" placeholder="Rechercher une activité">
+                    <div class="search_dates">
+                        <label>
+                            <span>Du</span>
+                            <input type="date" id="search_start">
+                        </label>
+                        <label>
+                            <span>Au</span>
+                            <input type="date" id="search_end">
+                        </label>
+                    </div>
                     <p id="search_erreur" class="erreur"></p>
                     <div id="search_results" hidden></div>
                 </div>
