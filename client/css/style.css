@@ -643,6 +643,10 @@ a.bouton {
     transition: grid-template-columns .3s ease, gap .3s ease;
 }
 
+#container > * {
+    min-height: 0;
+}
+
 #container.reduce {
     grid-template-columns: 0px minmax(0, 1fr);
     gap: 0;
@@ -665,12 +669,14 @@ a.bouton {
     grid-column: 1;
     padding: 16px;
     border-radius: 12px;
-    align-self: start;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 20px;
     transition: opacity .2s ease, visibility .3s;
+    min-height: 0;
+    overflow-y: auto;
+    position: relative;
 }
 
 #container.reduce > #agenda_panel {
@@ -681,6 +687,7 @@ a.bouton {
 #agenda_panel > * {
     width: 100%;
     margin: 0;
+    flex-shrink: 0;
 }
 
 #agenda_panel h2 {
@@ -802,6 +809,7 @@ a.bouton {
     display: flex;
     flex-direction: column;
     grid-column: 2;
+    min-height: 0;
     background: var(--surface);
     padding: 16px;
     border-radius: 30px;
@@ -907,6 +915,17 @@ a.bouton {
         clip-path: inset(50%);
         white-space: nowrap;
     }
+
+    #calendar_header {
+       display: flex;
+       flex-wrap: wrap;
+       gap: 12px 20px;
+   }
+
+   #search_container {
+       flex: 1 1 100%;
+       min-width: 0;
+   }
 }
 
 
