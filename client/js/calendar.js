@@ -248,6 +248,10 @@ export function addAgendaToPanel(calendar, panel, r) {
             div.style.setProperty('--agenda-color', r.eventColor || '#94a3b8');
             cb.style.accentColor = r.eventColor;
             refreshEventSource(calendar, cb, r);
+        }, () => {
+            // Agenda supprimé : on le retire du panneau et du calendrier
+            calendar.getEventSourceById(r.id)?.remove();
+            div.remove();
         });
     });
 

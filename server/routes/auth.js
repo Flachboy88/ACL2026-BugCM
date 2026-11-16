@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import { createJWT } from "../middlewares/auth.js";
 import crypto from "crypto";
 import { sendEMail } from "../mailer.js";
+import { creerAgendaParDefaut } from "./agendas.js";
 
 const router = express.Router();
 
@@ -110,7 +111,12 @@ router.post("/register", function (request, response){
     if(typeof(userExists) === "undefined"){
         if(password === confirmPassword){
             const passwordHash = bcrypt.hashSync(password,10);
-            const user = database.prepare("INSERT INTO utilisateur (nom, email, mot_de_passe_hash) VALUES (?, ?, ?)").run(userName, email, passwordHash);
+            // Le compte et son agenda par défaut sont créés ensemble
+            const user = database.transaction(function () {
+                const result = database.prepare("INSERT INTO utilisateur (nom, email, mot_de_passe_hash) VALUES (?, ?, ?)").run(userName, email, passwordHash);
+                creerAgendaParDefaut(result.lastInsertRowid);
+                return result;
+            })();
             const lifetime = 1000 * 60 * 30;
             const token = createJWT({id: user.lastInsertRowid, username: userName});
             response.cookie("accessToken", token, {httpOnly: true, maxAge: lifetime});

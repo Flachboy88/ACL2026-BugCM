@@ -1,4 +1,4 @@
-// Tests des routes des agendas : GET et POST /api/agendas
+// Tests des routes des agendas : GET, POST, PUT et DELETE /api/agendas
 import { describe, test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { demarrerServeur, requete, creerUtilisateur, creerAgenda } from "./helpers.js";
@@ -11,14 +11,26 @@ after(function () {
 });
 
 describe("GET /api/agendas", function () {
-    test("renvoie une liste vide pour un nouvel utilisateur", async function () {
-        // Échouera avec l'issue #62 (« Mon agenda » créé à l'inscription) : il faudra attendre ["Mon agenda"]
+    test("un nouvel utilisateur a seulement son agenda par défaut « Mon agenda » (#62)", async function () {
         const cookie = await creerUtilisateur(url);
 
         const response = await requete(url, "/api/agendas", { cookie: cookie });
+        const agendas = await response.json();
 
         assert.equal(response.status, 200);
-        assert.deepEqual(await response.json(), []);
+        assert.equal(agendas.length, 1);
+        assert.equal(agendas[0].nom, "Mon agenda");
+        assert.equal(agendas[0].couleur, "#3788d8");
+        assert.equal(agendas[0].droit, "proprietaire");
+        assert.equal(agendas[0].parDefaut, true);
+    });
+
+    test("un agenda créé ensuite n'est pas l'agenda par défaut", async function () {
+        const cookie = await creerUtilisateur(url);
+
+        const agenda = await creerAgenda(url, cookie, "Sport");
+
+        assert.equal(agenda.parDefaut, false);
     });
 
     test("renvoie les agendas de l'utilisateur, triés par nom", async function () {
@@ -30,7 +42,7 @@ describe("GET /api/agendas", function () {
         const agendas = await response.json();
 
         assert.equal(response.status, 200);
-        assert.deepEqual(agendas.map(function (agenda) { return agenda.nom; }), ["Cours", "Sport"]);
+        assert.deepEqual(agendas.map(function (agenda) { return agenda.nom; }), ["Cours", "Mon agenda", "Sport"]);
     });
 
     test("ne renvoie pas les agendas d'un autre utilisateur", async function () {
@@ -40,7 +52,9 @@ describe("GET /api/agendas", function () {
 
         const response = await requete(url, "/api/agendas", { cookie: cookieBob });
 
-        assert.deepEqual(await response.json(), []);
+        // Bob ne voit que son propre agenda par défaut
+        const noms = (await response.json()).map(function (agenda) { return agenda.nom; });
+        assert.deepEqual(noms, ["Mon agenda"]);
     });
 
     test("répond 401 sans être connecté", async function () {
@@ -215,6 +229,106 @@ describe("PUT /api/agendas/:idAgenda", function () {
             method: "PUT",
             body: { nom: "Travail", couleur: "#ff0000" }
         });
+
+        assert.equal(response.status, 401);
+    });
+});
+
+describe("DELETE /api/agendas/:idAgenda", function () {
+    // Liste des noms des agendas de l'utilisateur de ce cookie
+    async function nomsDesAgendas(cookie) {
+        const response = await requete(url, "/api/agendas", { cookie: cookie });
+        return (await response.json()).map(function (agenda) { return agenda.nom; });
+    }
+
+    // Inscrit un utilisateur avec un email connu (pour pouvoir lui partager un agenda)
+    let numero = 0;
+    async function inscrire() {
+        numero++;
+        const email = "suppression" + numero + "@test.fr";
+        const response = await requete(url, "/register", {
+            method: "POST",
+            body: { userName: "Suppr " + numero, email: email, password: "motdepasse1", confirmPassword: "motdepasse1" }
+        });
+        const cookie = response.headers.getSetCookie()[0].split(";")[0];
+        return { cookie: cookie, email: email };
+    }
+
+    test("supprime l'agenda (204), il disparaît de la liste", async function () {
+        const cookie = await creerUtilisateur(url);
+        const agenda = await creerAgenda(url, cookie, "Sport");
+
+        const response = await requete(url, "/api/agendas/" + agenda.idAgenda, { method: "DELETE", cookie: cookie });
+
+        assert.equal(response.status, 204);
+        assert.deepEqual(await nomsDesAgendas(cookie), ["Mon agenda"]);
+    });
+
+    test("refuse de supprimer l'agenda par défaut (403)", async function () {
+        const cookie = await creerUtilisateur(url);
+        const liste = await requete(url, "/api/agendas", { cookie: cookie });
+        const parDefaut = (await liste.json())[0];
+
+        const response = await requete(url, "/api/agendas/" + parDefaut.idAgenda, { method: "DELETE", cookie: cookie });
+
+        assert.equal(response.status, 403);
+        assert.deepEqual(await response.json(), { erreur: "L'agenda par défaut ne peut pas être supprimé" });
+        assert.deepEqual(await nomsDesAgendas(cookie), ["Mon agenda"]);
+    });
+
+    test("supprime aussi ses activités et ses partages", async function () {
+        const alice = await inscrire();
+        const bob = await inscrire();
+        const agenda = await creerAgenda(url, alice.cookie, "Projet");
+        const activite = await requete(url, "/api/agendas/" + agenda.idAgenda + "/activites", {
+            method: "POST",
+            cookie: alice.cookie,
+            body: { titre: "Réunion", debut: "2026-10-15T10:00:00Z", fin: "2026-10-15T11:00:00Z" }
+        });
+        assert.equal(activite.status, 201);
+        const partage = await requete(url, "/api/agendas/" + agenda.idAgenda + "/partages", {
+            method: "POST",
+            cookie: alice.cookie,
+            body: { email: bob.email, droit: "lecture" }
+        });
+        assert.equal(partage.status, 201);
+        assert.ok((await nomsDesAgendas(bob.cookie)).includes("Projet"));
+
+        const response = await requete(url, "/api/agendas/" + agenda.idAgenda, { method: "DELETE", cookie: alice.cookie });
+
+        assert.equal(response.status, 204);
+        // Bob ne voit plus l'agenda partagé, et l'activité n'existe plus
+        assert.deepEqual(await nomsDesAgendas(bob.cookie), ["Mon agenda"]);
+        const recherche = await requete(url, "/api/activites/recherche?q=Réunion", { cookie: alice.cookie });
+        assert.deepEqual(await recherche.json(), []);
+    });
+
+    test("répond 404 pour l'agenda d'un autre utilisateur, même partagé en écriture, sans le supprimer", async function () {
+        const alice = await inscrire();
+        const bob = await inscrire();
+        const agenda = await creerAgenda(url, alice.cookie, "À Alice");
+        await requete(url, "/api/agendas/" + agenda.idAgenda + "/partages", {
+            method: "POST",
+            cookie: alice.cookie,
+            body: { email: bob.email, droit: "ecriture" }
+        });
+
+        const response = await requete(url, "/api/agendas/" + agenda.idAgenda, { method: "DELETE", cookie: bob.cookie });
+
+        assert.equal(response.status, 404);
+        assert.ok((await nomsDesAgendas(alice.cookie)).includes("À Alice"));
+    });
+
+    test("répond 404 pour un agenda qui n'existe pas", async function () {
+        const cookie = await creerUtilisateur(url);
+
+        const response = await requete(url, "/api/agendas/999999", { method: "DELETE", cookie: cookie });
+
+        assert.equal(response.status, 404);
+    });
+
+    test("répond 401 sans être connecté", async function () {
+        const response = await requete(url, "/api/agendas/1", { method: "DELETE" });
 
         assert.equal(response.status, 401);
     });
