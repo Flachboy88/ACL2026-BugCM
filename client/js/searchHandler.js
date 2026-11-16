@@ -62,49 +62,43 @@ async function rechercherActivites({ q, start, end, idAgendas = [] }) {
 }
 
 /**
- * Affiche la liste des activités trouvées et permet de naviguer vers leur date
+ * Affiche la liste des activités trouvées dans le menu déroulant
  */
-function afficherResultats(activites, container, calendar) {
-    container.innerHTML = "";
+function afficherResultats(activites, selectEl, wrapperEl) {
+    selectEl.innerHTML = "";
 
     if (activites.length === 0) {
-        container.innerHTML = "<p>Aucune activité trouvée.</p>";
-        container.hidden = false;
+        const vide = document.createElement("option");
+        vide.value = "";
+        vide.textContent = "Aucune activité trouvée";
+        selectEl.appendChild(vide);
+        wrapperEl.hidden = false;
         return;
     }
 
-    const liste = document.createElement("ul");
+    // Option par défaut pour que la sélection du 1er résultat déclenche bien "change"
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+
+    if (activites.length != 1 ){
+        placeholder.textContent = `${activites.length} activité(s) trouvée(s) — choisir...`;
+        selectEl.appendChild(placeholder);
+    }
 
     for (const act of activites) {
-        const item = document.createElement("li");
+        const item = document.createElement("option");
         const debutDate = new Date(act.debut);
         const dateFormatee = debutDate.toLocaleString("fr-FR", {
             dateStyle: "short",
             timeStyle: "short"
         });
 
-        const titre = document.createElement("strong");
-        titre.textContent = act.titre;
-
-        const details = document.createElement("span");
-        details.textContent = ` — ${dateFormatee}${act.lieu ? ` (${act.lieu})` : ""}`;
-
-        item.append(titre, details);
-
-        // Au clic, on déplace le calendrier directement à la date de l'activité
-        if (calendar) {
-            item.style.cursor = "pointer";
-            item.addEventListener("click", () => {
-                calendar.gotoDate(act.debut);
-                container.hidden = true;
-            });
-        }
-
-        liste.appendChild(item);
+        item.value = act.debut;
+        item.textContent = `${act.titre} — ${dateFormatee}${act.lieu ? ` (${act.lieu})` : ""}`;
+        selectEl.appendChild(item);
     }
 
-    container.appendChild(liste);
-    container.hidden = false;
+    wrapperEl.hidden = false;
 }
 
 /**
@@ -114,11 +108,21 @@ export function initSearch(calendar = null, agendaListId = "agenda_list") {
     const searchInput = document.getElementById("Recherche");
     const startInput = document.getElementById("search_start");
     const endInput = document.getElementById("search_end");
-    const resultsContainer = document.getElementById("search_results");
+    const resultsSelect = document.getElementById("search_results");
+    const resultsWrapper = document.getElementById("search_results_wrapper");
     const errorContainer = document.getElementById("search_erreur");
     const agendaListEl = document.getElementById(agendaListId);
 
-    if (!searchInput || !resultsContainer) return;
+    if (!searchInput || !resultsSelect || !resultsWrapper) return;
+
+    // Navigation vers la date choisie dans le dropdown
+    resultsSelect.addEventListener("change", () => {
+        if (!resultsSelect.value) return;
+        if (calendar) {
+            calendar.gotoDate(resultsSelect.value);
+        }
+        resultsWrapper.hidden = true;
+    });
 
     const lancerRecherche = async () => {
         const q = searchInput.value;
@@ -127,19 +131,17 @@ export function initSearch(calendar = null, agendaListId = "agenda_list") {
 
         if (errorContainer) errorContainer.textContent = "";
 
-        // Si aucun critère n'est renseigné, on masque les résultats
         if (!q.trim() && !start && !end) {
-            resultsContainer.hidden = true;
-            resultsContainer.innerHTML = "";
+            resultsWrapper.hidden = true;
+            resultsSelect.innerHTML = "";
             return;
         }
 
         const totalAgendas = agendaListEl?.querySelectorAll(".agenda").length ?? 0;
         const idAgendas = getAgendasSelectionnes(agendaListEl);
 
-        // Si des agendas existent mais qu'aucun n'est coché, on n'affiche rien
         if (totalAgendas > 0 && idAgendas.length === 0) {
-            afficherResultats([], resultsContainer, calendar);
+            afficherResultats([], resultsSelect, resultsWrapper);
             return;
         }
 
@@ -148,14 +150,14 @@ export function initSearch(calendar = null, agendaListId = "agenda_list") {
                 q,
                 start,
                 end,
-                idAgendas: getAgendasSelectionnes(agendaListEl)
+                idAgendas
             });
 
             if (activites !== null) {
-                afficherResultats(activites, resultsContainer, calendar);
+                afficherResultats(activites, resultsSelect, resultsWrapper);
             }
         } catch (err) {
-            resultsContainer.hidden = true;
+            resultsWrapper.hidden = true;
             if (errorContainer) errorContainer.textContent = err.message;
         }
     };
