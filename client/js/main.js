@@ -2,7 +2,14 @@ import { createCalendar, initAgendaPanel, addAgendaToPanel, mobile } from './cal
 import { initSearch } from "./searchHandler.js";
 
 function toPanelAgenda(agenda) {
-    return { id: String(agenda.idAgenda), title: agenda.nom, eventColor: agenda.couleur, description: agenda.description };
+    return {
+        id: String(agenda.idAgenda),
+        title: agenda.nom,
+        eventColor: agenda.couleur,
+        description: agenda.description,
+        droit: agenda.droit,
+        parDefaut: agenda.parDefaut
+    };
 }
 
 // Creates and shows the calendar

@@ -7,17 +7,23 @@ const couleurInput = document.getElementById('agenda_modal_couleur');
 const descriptionInput = document.getElementById('agenda_modal_description');
 const erreurText = document.getElementById('agenda_modal_erreur');
 const cancelButton = document.getElementById('agenda_modal_annuler');
+const deleteButton = document.getElementById('agenda_modal_supprimer');
 
-// Agenda being edited and callback to run once the server accepted the change
+// Agenda being edited and callbacks to run once the server accepted the change / the deletion
 let editedId = null;
 let onSaved = null;
+let onDeleted = null;
 
-// Opens the window filled with the current values of the given agenda ({ id, title, eventColor, description })
-export function openAgendaModal(agenda, onSavedCallback) {
+// Opens the window filled with the current values of the given agenda
+// ({ id, title, eventColor, description, droit, parDefaut })
+export function openAgendaModal(agenda, onSavedCallback, onDeletedCallback) {
     form.reset();
     erreurText.textContent = '';
     editedId = agenda.id;
     onSaved = onSavedCallback;
+    onDeleted = onDeletedCallback;
+    // Only the owner can delete an agenda, and never the default one (« Mon agenda »)
+    deleteButton.hidden = agenda.parDefaut || agenda.droit !== 'proprietaire';
     nomInput.value = agenda.title;
     couleurInput.value = agenda.eventColor;
     descriptionInput.value = agenda.description ?? '';
@@ -47,6 +53,21 @@ form.addEventListener('submit', async function (event) {
     }
     modal.close();
     onSaved(donnees); // { idAgenda, nom, couleur, description }
+});
+
+// Delete after confirmation; its activities and shares are deleted too by the server
+deleteButton.addEventListener('click', async function () {
+    if (!confirm('Supprimer cet agenda et tous ses rendez-vous ?')) {
+        return;
+    }
+    const reponse = await fetch(`/api/agendas/${editedId}`, { method: 'DELETE' });
+    if (!reponse.ok) {
+        const donnees = await reponse.json();
+        erreurText.textContent = donnees.erreur;
+        return;
+    }
+    modal.close();
+    onDeleted();
 });
 
 // Cancel closes without saving (the Escape key does the same)

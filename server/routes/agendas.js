@@ -7,6 +7,17 @@ const router = express.Router();
 // Format #RRGGBB, comme dans conception.md (c'est aussi ce que donne <input type="color">)
 const COULEUR_VALIDE = /^#[0-9a-fA-F]{6}$/;
 
+// Agenda créé à l'inscription : il ne peut pas être supprimé (colonne par_defaut)
+const NOM_AGENDA_PAR_DEFAUT = "Mon agenda";
+const COULEUR_AGENDA_PAR_DEFAUT = "#3788d8";
+
+// Crée « Mon agenda » pour un nouvel utilisateur (appelé à l'inscription, dans auth.js)
+export function creerAgendaParDefaut(idUtilisateur) {
+    database.prepare(
+        "INSERT INTO agenda (nom, couleur, description, id_utilisateur, par_defaut) VALUES (?, ?, NULL, ?, 1)"
+    ).run(NOM_AGENDA_PAR_DEFAUT, COULEUR_AGENDA_PAR_DEFAUT, idUtilisateur);
+}
+
 // Id de l'utilisateur connecté, lu dans le token par le middleware auth de middlewares/auth.js
 function getIdUtilisateur(response) {
     return response.locals.user.id;
@@ -19,7 +30,8 @@ function toJson(row, droit) {
         nom: row.nom,
         couleur: row.couleur,
         description: row.description,
-        droit: droit
+        droit: droit,
+        parDefaut: row.par_defaut === 1
     };
 }
 
@@ -68,6 +80,23 @@ router.put("/agendas/:idAgenda", function (request, response) {
     const row = database.prepare("SELECT * FROM agenda WHERE id_agenda = ?").get(request.params.idAgenda);
     // Seul le propriétaire peut modifier l'agenda (WHERE ... id_utilisateur ci-dessus)
     response.json(toJson(row, "proprietaire"));
+});
+
+// Supprimer un agenda de l'utilisateur connecté, avec ses activités et ses partages (ON DELETE CASCADE).
+// L'agenda par défaut (« Mon agenda ») ne peut pas être supprimé.
+router.delete("/agendas/:idAgenda", function (request, response) {
+    // Seul le propriétaire peut supprimer, pour les autres, l'agenda est « introuvable »
+    const agenda = database.prepare(
+        "SELECT par_defaut FROM agenda WHERE id_agenda = ? AND id_utilisateur = ?"
+    ).get(request.params.idAgenda, getIdUtilisateur(response));
+    if (agenda === undefined) {
+        return response.status(404).json({ erreur: "Agenda introuvable" });
+    }
+    if (agenda.par_defaut === 1) {
+        return response.status(403).json({ erreur: "L'agenda par défaut ne peut pas être supprimé" });
+    }
+    database.prepare("DELETE FROM agenda WHERE id_agenda = ?").run(request.params.idAgenda);
+    response.status(204).end();
 });
 
 export default router;

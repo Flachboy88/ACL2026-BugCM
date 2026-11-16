@@ -148,7 +148,7 @@ Les données sont échangées en JSON. En cas d'erreur, la réponse contient `{ 
 
 | Méthode | Route | Description |
 |---|---|---|
-| `POST` | `/register` | Crée un compte (`userName`, `email`, `password`, `confirmPassword`) et connecte l'utilisateur |
+| `POST` | `/register` | Crée un compte (`userName`, `email`, `password`, `confirmPassword`) avec son agenda par défaut « Mon agenda », et connecte l'utilisateur |
 | `POST` | `/login` | Connecte l'utilisateur (`email`, `password`) |
 | `POST` | `/logout` | Ferme la session (efface le cookie) et redirige vers `/login` |
 | `POST` | `/forget` | Envoie un mail de réinitialisation de mot de passe (`email`) |
@@ -161,8 +161,10 @@ Toutes les routes `/api/...` demandent d'être connecté : sinon elles réponden
 
 | Méthode | Route | Description |
 |---|---|---|
-| `GET` | `/api/agendas` | Liste les agendas de l'utilisateur (les siens + ceux partagés avec lui), avec son `droit` sur chacun |
+| `GET` | `/api/agendas` | Liste les agendas de l'utilisateur (les siens + ceux partagés avec lui), avec son `droit` sur chacun et `parDefaut` (`true` pour « Mon agenda ») |
 | `POST` | `/api/agendas` | Crée un agenda (`nom`, `couleur` au format `#RRGGBB`, `description` facultative) |
+| `PUT` | `/api/agendas/:idAgenda` | Modifie un de ses agendas (mêmes champs) |
+| `DELETE` | `/api/agendas/:idAgenda` | Supprime un de ses agendas avec ses activités et ses partages (`403` pour l'agenda par défaut) |
 | `GET` | `/api/agendas/:idAgenda/activites?start=...&end=...` | Liste les activités de l'agenda qui chevauchent la période donnée |
 | `POST` | `/api/agendas/:idAgenda/activites` | Crée une activité (`titre`, `debut`, `fin`, `lieu` et `description` facultatifs) |
 | `PUT` | `/api/activites/:idActivite` | Modifie une activité (mêmes champs, sans changer d'agenda) |
