@@ -80,6 +80,7 @@ function afficherResultats(activites, selectEl, wrapperEl) {
     const placeholder = document.createElement("option");
     placeholder.value = "";
 
+    // Si une seule activité affiche directement sinon placeholder
     if (activites.length != 1 ){
         placeholder.textContent = `${activites.length} activité(s) trouvée(s) — choisir...`;
         selectEl.appendChild(placeholder);
