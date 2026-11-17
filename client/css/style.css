@@ -748,13 +748,6 @@ a.bouton {
     flex-shrink: 0;
 }
 
-/* --- New agenda form --- */
-#agenda_form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
 .ligne_form {
     display: flex;
     gap: 8px;
@@ -773,9 +766,6 @@ a.bouton {
 #agenda_couleur::-webkit-color-swatch { border: none; border-radius: 4px; }
 #agenda_couleur::-moz-color-swatch    { border: none; border-radius: 4px; }
 
-#agenda_form .bouton {
-    border-radius: 8px;
-}
 
 @media (max-width: 768px) {
     /* The panel becomes a drawer sliding in from the left */
@@ -798,6 +788,34 @@ a.bouton {
         transform: translateX(-100%);
         opacity: 1;              /* slide only, no fade */
     }
+}
+
+/* --- "Create an agenda" button --- */
+#create_agenda {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--primary);
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+#create_agenda:hover {
+    background-color: var(--primary-hover);
+}
+
+#create_agenda svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
 }
 
 
@@ -998,7 +1016,8 @@ a.bouton {
    ========================================================================== */
 
 #activite_modal,
-#agenda_modal {
+#agenda_modal,
+#create_agenda_modal {
     width: 420px;
     max-width: calc(100vw - 32px);
     border: none;
@@ -1008,19 +1027,24 @@ a.bouton {
 }
 
 #activite_modal::backdrop,
-#agenda_modal::backdrop {
+#agenda_modal::backdrop,
+#create_agenda_modal::backdrop {
     background: rgba(0, 0, 0, .4);
 }
 
 #activite_modal h2,
-#agenda_modal h2 {
+#agenda_modal h2,
+#create_agenda_modal h2 {
     margin: 0 0 16px;
     font-size: 20px;
+    text-align: center;
 }
 
 #activite_modal select,
 #activite_modal textarea,
-#agenda_modal textarea {
+#agenda_modal textarea,
+#create_agenda_modal select,
+#create_agenda_modal textarea {
     width: 100%;
     padding: 12px;
     border: 1px solid var(--border);
