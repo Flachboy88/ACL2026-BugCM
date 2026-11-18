@@ -1,4 +1,14 @@
 <!-- client/views/partials/header.ejs -->
+<script>
+    // ce truc permet de charger imédiatement le thème sur la page. Si il est retiré le theme ne charge pas assez vite et on voie la transition de theme a chaque changement de pages.
+    // Il faudrais utiliser des cookie pour régler le pb sinon. 
+    (function() {
+        const savedTheme = localStorage.getItem('selected_theme') || 'claire';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+</script>
+
+
 <div id="header">
     <button id="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="agenda_panel">
       <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
@@ -23,9 +33,28 @@
         <div id="menu_profil" class="menu_profil" hidden>
             <a href="/profil">Voir profil</a>
             <button type="button" id="logout">Déconnexion</button>
+            <button type="button" id="bouton_themes_ouvrir">Thèmes</button>
+        </div>
+    </div>
+
+    <div id="barre_themes_id" class="barre_themes">
+        <div class="barre_themes_header">
+            <h3>Choisir un thème</h3>
+            <button type="button" id="bouton_themes_fermer">✕</button>
+        </div>
+        
+        <div class="theme_liste">
+            <button type="button" class="theme-option" data-set-theme="claire">
+                Claire
+            </button>
+            
+            <button type="button" class="theme-option" data-set-theme="sombre">
+                Sombre
+            </button>
         </div>
     </div>
 
     <script src="/js/profilMenu.js"></script>
     <script src="/js/logout.js"></script>
+    <script src="/js/theme.js"></script>
 </div>
