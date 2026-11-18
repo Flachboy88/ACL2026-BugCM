@@ -32,26 +32,14 @@
             <h2>Mes agendas</h2>
             <hr>
             <div id="agenda_list"></div>
-
-            <form id="agenda_form">
-                <div class="ligne_form">
-                    <label for="agenda_nom" class="sr-only">Nom de l'agenda</label>
-                    <input type="text" id="agenda_nom" placeholder="Nom de l'agenda" required>
-
-                    <label for="agenda_couleur" class="sr-only">Couleur de l'agenda</label>
-                    <input type="color" id="agenda_couleur" value="#3788d8">
-                </div>
-                <label for="agenda_description" class="sr-only">Description de l'agenda</label>
-                <input type="text" id="agenda_description" placeholder="Description (optionnel)">
-                <label for="share_agenda">Partager avec </label>
-                <input type="email" id="share_agenda" placeholder="Email (optionnel)">
-                <select id="rights">
-                    <option value="lecture">Lecture</option>
-                    <option value="ecriture">Écriture</option>
-                </select>
-                <button type="submit" class="bouton">Créer</button>
-                <p id="agenda_erreur" class="erreur"></p>
-            </form>
+            
+            <button type="button" id="create_agenda" aria-label="Créer un agenda">
+                <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                    <rect x="3" y="5" width="18" height="16" rx="2" />
+                    <path d="M3 10h18M8 3v4M16 3v4" />
+                </svg>
+                <span class="texte">Créer un agenda</span>
+            </button>
         </div>
         
         <div id="calendar_container">
@@ -181,6 +169,40 @@
                 <button type="button" id="agenda_modal_supprimer" class="bouton_supprimer">Supprimer</button>
                 <button type="button" id="agenda_modal_annuler">Annuler</button>
                 <button type="submit" class="bouton_enregistrer">Enregistrer</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="create_agenda_modal">
+        <form id="create_agenda_form">
+            <h2>Créer un agenda</h2>
+            <div class="field">
+                <label for="agenda_nom">Nom de l'agenda</label>
+                <input type="text" id="agenda_nom" placeholder="Nom de l'agenda" required>
+            </div>
+            <div class="field">
+                <label for="agenda_couleur">Couleur de l'agenda</label>
+                <input type="color" id="agenda_couleur" value="#3788d8">
+            </div>
+            <div class="field">
+                <label for="agenda_description">Description de l'agenda</label>
+                <input type="text" id="agenda_description" placeholder="Description (optionnel)">
+            </div>
+            <div class="field">
+                <label for="share_agenda">Partager avec </label>
+                <input type="email" id="share_agenda" placeholder="Email (optionnel)">
+            </div>
+            <div class="field">
+                <label for="rights">Droit de partage</label>
+                <select id="rights">
+                    <option value="lecture">Lecture seule</option>
+                    <option value="ecriture">Lecture et Écriture</option>
+                </select>
+            </div>
+            <p id="create_agenda_erreur" class="erreur"></p>
+            <div class="modal_boutons">
+                <button type="button" id="create_agenda_modal_annuler">Annuler</button>            
+                <button type="submit" class="bouton_enregistrer">Créer</button>
             </div>
         </form>
     </dialog>
