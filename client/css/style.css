@@ -2,13 +2,27 @@
    VARIABLES & RESET
    ========================================================================== */
 
-:root {
+:root,
+
+[data-theme="claire"]{
     --bg: #f5f7fa;
     --surface: #fff;
     --text: #1f2937;
     --border: #e5e7eb;
     --primary: #2563eb;
     --primary-hover: #1d4ed8;
+    --primary-text:#ffffff; /* text spécifique aux bouttons */
+    --page-padding: 16px;
+}
+
+[data-theme="sombre"] {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --text: #f8fafc;
+    --border: #334155;
+    --primary: #3b82f6;   
+    --primary-hover: #60a5fa;
+    --primary-text: #ffffff; /* text spécifique aux bouttons */
     --page-padding: 16px;
 }
 
@@ -257,6 +271,88 @@ a.bouton {
 .login .profil_menu,
 .register .profil_menu {
     display: none;
+}
+
+/* Barre latérale des thèmes */
+.barre_themes {
+    position: fixed;
+    top: 0;
+    right: -320px;
+    width: 300px;
+    height: 100vh;
+    background-color: var(--surface);
+    color: var(--text);
+    border-left: 1px solid var(--border);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.05);
+    transition: right 0.3s ease-in-out;
+    z-index: 9999;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.barre_themes.open {
+    right: 0;
+}
+
+.barre_themes_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--text);
+    padding-bottom: 12px;
+}
+
+.barre_themes_header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text);
+}
+
+#bouton_themes_fermer {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+#bouton_themes_fermer:hover {
+    background-color: var(--bg);
+}
+
+.theme_liste {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.theme-option {
+    background-color: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.theme-option:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.theme-option.active {
+    background-color: var(--primary);
+    color: var(--primary-text);
+    border-color: var(--primary);
 }
 
 /* ==========================================================================
