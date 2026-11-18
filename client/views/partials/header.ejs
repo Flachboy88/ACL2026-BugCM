@@ -3,7 +3,7 @@
     // ce truc permet de charger imédiatement le thème sur la page. Si il est retiré le theme ne charge pas assez vite et on voie la transition de theme a chaque changement de pages.
     // Il faudrais utiliser des cookie pour régler le pb sinon. 
     (function() {
-        const savedTheme = localStorage.getItem('selected_theme') || 'light';
+        const savedTheme = localStorage.getItem('selected_theme') || 'claire';
         document.documentElement.setAttribute('data-theme', savedTheme);
     })();
 </script>

@@ -12,12 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return localStorage.getItem('selected_theme') || 'claire';
     }
 
-    // fonction pour appliqué le theme sans le sauvgarder
+    // fonction pour appliquer le theme sans le sauvgarder
     function applyThemeVisual(themeName) {
         document.documentElement.setAttribute('data-theme', themeName);
     }
 
-    // fonction pour appliqué le theme et le sauvgarder 
+    // fonction pour appliquer le theme et le sauvgarder 
     function applyTheme(themeName) {
         applyThemeVisual(themeName);
         localStorage.setItem('selected_theme', themeName);
