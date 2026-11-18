@@ -46,7 +46,7 @@ Légende : « Fait » = fait et validé, « Écart » = fait, mais différemment
 
 | Story | État | Remarque |
 |---|---|---|
-| Thème clair / sombre *(reprise sprint 1)* | Fait | PR #113, correctifs en cours avant fusion |
+| Thème clair / sombre *(reprise sprint 1)* | Fait | Thème clair / sombre conservé au rechargement, fusionné en fin de sprint (#113) |
 
 ---
 
