@@ -85,6 +85,29 @@ function getAgendaDeActivite(idActivite) {
     ).get(idActivite);
 }
 
+// Activité sur laquelle l'utilisateur peut écrire. Renvoie { activite } ou { statut, erreur }
+function activiteModifiable(idUtilisateur, idActivite) {
+    const activite = database.prepare("SELECT * FROM activite WHERE id_activite = ?").get(idActivite);
+    if (activite === undefined) {
+        return { statut: 404, erreur: "Activité introuvable" };
+    }
+    const droit = droitSurAgenda(idUtilisateur, activite.id_agenda);
+    if (droit === null) {
+        return { statut: 404, erreur: "Activité introuvable" };
+    }
+    if (!peutEcrire(droit)) {
+        return { statut: 403, erreur: "Droit insuffisant" };
+    }
+    return { activite: activite };
+}
+
+// Ajoute une exception (date de l'occurrence à ne plus afficher) ; rien si elle existe déjà
+function ajouterException(idActivite, date) {
+    database.prepare(
+        "INSERT OR IGNORE INTO exception_activite (id_activite, date_occurrence) VALUES (?, ?)"
+    ).run(idActivite, date);
+}
+
 /**
  * Recherche dans les activités accessibles (ses agendas + agendas partagés)
  * GET /activites/recherche?q=...&start=...&end=...&idAgenda=...
@@ -163,7 +186,17 @@ router.get("/agendas/:idAgenda/activites", function (request, response) {
         "SELECT * FROM activite WHERE id_agenda = ? AND debut < ? AND (fin > ? OR " +
         "(frequence IS NOT NULL AND (fin_recurrence IS NULL OR fin_recurrence >= date(?, '-1 day'))))"
     ).all(request.params.idAgenda, end, start, start);
-    response.json(rows.map(toJson));
+    const lireExceptions = database.prepare(
+        "SELECT date_occurrence FROM exception_activite WHERE id_activite = ? ORDER BY date_occurrence"
+    );
+    response.json(rows.map(function (row) {
+        const activite = toJson(row);
+        // Dates des occurrences à ne pas afficher (supprimées ou détachées)
+        activite.exceptions = lireExceptions.all(row.id_activite).map(function (e) {
+            return e.date_occurrence;
+        });
+        return activite;
+    }));
 });
 
 /**
@@ -267,6 +300,65 @@ router.delete("/activites/:idActivite", function (request, response) {
     }
     database.prepare("DELETE FROM activite WHERE id_activite = ?").run(request.params.idActivite);
     response.status(204).end(); // Succes
+});
+
+/**
+ * Modifie une seule occurrence d'une série : l'occurrence est retirée de la série
+ * (exception) et remplacée par une activité simple avec les nouvelles valeurs.
+ * POST /activites/:idActivite/occurrences   body { date, titre, debut, fin, lieu, description, journeeEntiere }
+ */
+router.post("/activites/:idActivite/occurrences", function (request, response) {
+    const { date, titre, debut, fin, lieu, description, journeeEntiere } = request.body ?? {};
+    const dates = lireDates(debut, fin, journeeEntiere === true);
+
+    const erreur = checkActivite(titre, dates.debut, dates.fin);
+    if (erreur !== null) {
+        return response.status(400).json({ erreur: erreur });
+    }
+    if (toJour(date) === null) {
+        return response.status(400).json({ erreur: "Date de l'occurrence invalide" });
+    }
+
+    const resultat = activiteModifiable(response.locals.user.id, request.params.idActivite);
+    if (resultat.erreur !== undefined) {
+        return response.status(resultat.statut).json({ erreur: resultat.erreur });
+    }
+    if (resultat.activite.frequence === null) {
+        return response.status(400).json({ erreur: "L'activité n'est pas récurrente" });
+    }
+
+    // Les deux écritures vont ensemble : soit tout passe, soit rien ne change
+    const detacher = database.transaction(function () {
+        ajouterException(resultat.activite.id_activite, date);
+        return database.prepare(
+            "INSERT INTO activite (titre, debut, fin, lieu, description, journee_entiere, id_agenda) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?)"
+        ).run(titre.trim(), dates.debut, dates.fin, lieu ?? null, description ?? null,
+            journeeEntiere === true ? 1 : 0, resultat.activite.id_agenda).lastInsertRowid;
+    });
+    const idNouvelle = detacher();
+
+    const row = database.prepare("SELECT * FROM activite WHERE id_activite = ?").get(idNouvelle);
+    response.status(201).json(toJson(row));
+});
+
+/**
+ * Supprime une seule occurrence d'une série (les autres restent)
+ * DELETE /activites/:idActivite/occurrences/:date   (date au format YYYY-MM-DD)
+ */
+router.delete("/activites/:idActivite/occurrences/:date", function (request, response) {
+    if (toJour(request.params.date) === null) {
+        return response.status(400).json({ erreur: "Date de l'occurrence invalide" });
+    }
+    const resultat = activiteModifiable(response.locals.user.id, request.params.idActivite);
+    if (resultat.erreur !== undefined) {
+        return response.status(resultat.statut).json({ erreur: resultat.erreur });
+    }
+    if (resultat.activite.frequence === null) {
+        return response.status(400).json({ erreur: "L'activité n'est pas récurrente" });
+    }
+    ajouterException(resultat.activite.id_activite, request.params.date);
+    response.status(204).end();
 });
 
 export default router;
