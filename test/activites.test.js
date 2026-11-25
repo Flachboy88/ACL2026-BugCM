@@ -565,3 +565,104 @@ describe("GET /api/activites/recherche", function () {
         assert.equal(response.status, 401);
     });
 });
+describe("Activité sur la journée entière", function () {
+    test("crée une activité journée entière avec des dates sans heure", async function () {
+        const activite = await creerActivite({ debut: "2026-10-15", fin: "2026-10-16", journeeEntiere: true });
+
+        assert.equal(activite.journeeEntiere, true);
+        assert.equal(activite.debut, "2026-10-15");
+        assert.equal(activite.fin, "2026-10-16");
+    });
+
+    test("une activité normale a journeeEntiere à false", async function () {
+        const activite = await creerActivite();
+
+        assert.equal(activite.journeeEntiere, false);
+    });
+
+    test("refuse une date avec heure en journée entière (400)", async function () {
+        const response = await requete(url, "/api/agendas/" + agendaAlice.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieAlice,
+            body: { titre: "Congé", debut: "2026-10-15T08:00:00Z", fin: "2026-10-16", journeeEntiere: true }
+        });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { erreur: "Champs manquants" });
+    });
+
+    test("refuse une date qui n'existe pas (400)", async function () {
+        const response = await requete(url, "/api/agendas/" + agendaAlice.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieAlice,
+            body: { titre: "Congé", debut: "2026-02-30", fin: "2026-03-01", journeeEntiere: true }
+        });
+
+        assert.equal(response.status, 400);
+    });
+
+    test("refuse une fin égale au début (la fin est exclue) (400)", async function () {
+        const response = await requete(url, "/api/agendas/" + agendaAlice.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieAlice,
+            body: { titre: "Congé", debut: "2026-10-15", fin: "2026-10-15", journeeEntiere: true }
+        });
+
+        assert.equal(response.status, 400);
+        assert.deepEqual(await response.json(), { erreur: "La fin doit être après le début" });
+    });
+
+    test("un PUT passe une activité en journée entière, puis la remet avec des heures", async function () {
+        const activite = await creerActivite();
+
+        let response = await requete(url, "/api/activites/" + activite.idActivite, {
+            method: "PUT",
+            cookie: cookieAlice,
+            body: { titre: "Cours", debut: "2026-10-15", fin: "2026-10-16", journeeEntiere: true }
+        });
+        let modifiee = await response.json();
+        assert.equal(response.status, 200);
+        assert.equal(modifiee.journeeEntiere, true);
+        assert.equal(modifiee.debut, "2026-10-15");
+
+        response = await requete(url, "/api/activites/" + activite.idActivite, {
+            method: "PUT",
+            cookie: cookieAlice,
+            body: { titre: "Cours", debut: "2026-10-15T08:00:00Z", fin: "2026-10-15T10:00:00Z" }
+        });
+        modifiee = await response.json();
+        assert.equal(modifiee.journeeEntiere, false);
+        assert.equal(modifiee.debut, "2026-10-15T08:00:00.000Z");
+    });
+
+    test("marche avec la répétition", async function () {
+        const activite = await creerActivite({
+            debut: "2026-10-15", fin: "2026-10-16", journeeEntiere: true,
+            frequence: "hebdomadaire", finRecurrence: "2026-12-31"
+        });
+
+        assert.equal(activite.journeeEntiere, true);
+        assert.equal(activite.frequence, "hebdomadaire");
+    });
+
+    test("GET et recherche renvoient journeeEntiere", async function () {
+        const agenda = await creerAgenda(url, cookieAlice, "Journées");
+        await requete(url, "/api/agendas/" + agenda.idAgenda + "/activites", {
+            method: "POST",
+            cookie: cookieAlice,
+            body: { titre: "Séminaire annuel", debut: "2026-11-24", fin: "2026-11-26", journeeEntiere: true }
+        });
+
+        let response = await requete(url,
+            "/api/agendas/" + agenda.idAgenda + "/activites?start=2026-11-23T00:00:00Z&end=2026-11-30T00:00:00Z",
+            { cookie: cookieAlice });
+        let activites = await response.json();
+        assert.equal(activites.length, 1);
+        assert.equal(activites[0].journeeEntiere, true);
+
+        response = await requete(url, "/api/activites/recherche?q=Séminaire&idAgenda=" + agenda.idAgenda, { cookie: cookieAlice });
+        activites = await response.json();
+        assert.equal(activites.length, 1);
+        assert.equal(activites[0].journeeEntiere, true);
+    });
+});
