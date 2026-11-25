@@ -14,7 +14,8 @@ function toJson(row) {
         lieu: row.lieu,
         description: row.description,
         frequence: row.frequence,
-        finRecurrence: row.fin_recurrence
+        finRecurrence: row.fin_recurrence,
+        journeeEntiere: row.journee_entiere === 1
     };
 }
 
@@ -46,6 +47,24 @@ function checkFrequences(frequence, finRecurrence, debutUtc){
 function toUtc(value) {
     const date = new Date(value);
     return isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+// Garde une date sans heure (YYYY-MM-DD) si elle existe vraiment, sinon null
+function toJour(value) {
+    if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return null;
+    }
+    const utc = toUtc(value);
+    return utc !== null && utc.slice(0, 10) === value ? value : null;
+}
+
+// Début et fin à enregistrer : des dates sans heure pour une journée entière
+// (fin exclue : une activité le 15 va du 15 au 16), sinon des dates UTC
+function lireDates(debut, fin, journeeEntiere) {
+    if (journeeEntiere) {
+        return { debut: toJour(debut), fin: toJour(fin) };
+    }
+    return { debut: toUtc(debut), fin: toUtc(fin) };
 }
 
 // Vérifie les champs d'une activité : renvoie le message d'erreur, ou null si tout est bon
@@ -152,9 +171,10 @@ router.get("/agendas/:idAgenda/activites", function (request, response) {
  * POST
  */
 router.post("/agendas/:idAgenda/activites", function (request, response) {
-    const { titre, debut, fin, lieu, description, frequence, finRecurrence } = request.body ?? {};
-    const debutUtc = toUtc(debut);
-    const finUtc = toUtc(fin);
+    const { titre, debut, fin, lieu, description, frequence, finRecurrence, journeeEntiere } = request.body ?? {};
+    const dates = lireDates(debut, fin, journeeEntiere === true);
+    const debutUtc = dates.debut;
+    const finUtc = dates.fin;
 
     // Test val null et cohérence des dates
     const erreur = checkActivite(titre, debutUtc, finUtc);
@@ -177,10 +197,10 @@ router.post("/agendas/:idAgenda/activites", function (request, response) {
 
     // Insertation dans bd
     const result = database.prepare(
-        "INSERT INTO activite (titre, debut, fin, lieu, description, frequence, fin_recurrence, id_agenda) " +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO activite (titre, debut, fin, lieu, description, frequence, fin_recurrence, journee_entiere, id_agenda) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         ).run(titre.trim(), debutUtc, finUtc, lieu ?? null, description ?? null,
-        recurrence.frequence, recurrence.finRecurrence, request.params.idAgenda);
+        recurrence.frequence, recurrence.finRecurrence, journeeEntiere === true ? 1 : 0, request.params.idAgenda);
     
     //Récupération de l'élément crée pour le renvoyer 
     const row = database.prepare("SELECT * FROM activite WHERE id_activite = ?").get(result.lastInsertRowid);
@@ -192,9 +212,10 @@ router.post("/agendas/:idAgenda/activites", function (request, response) {
  * PUT
  */
 router.put("/activites/:idActivite", function (request, response) {
-    const { titre, debut, fin, lieu, description, frequence, finRecurrence } = request.body ?? {};
-    const debutUtc = toUtc(debut);
-    const finUtc = toUtc(fin);
+    const { titre, debut, fin, lieu, description, frequence, finRecurrence, journeeEntiere } = request.body ?? {};
+    const dates = lireDates(debut, fin, journeeEntiere === true);
+    const debutUtc = dates.debut;
+    const finUtc = dates.fin;
 
     const erreur = checkActivite(titre, debutUtc, finUtc);
     if (erreur !== null) {
@@ -218,10 +239,10 @@ router.put("/activites/:idActivite", function (request, response) {
         return response.status(403).json({ erreur: "Droit insuffisant" });
     }
     database.prepare(
-        "UPDATE activite SET titre = ?, debut = ?, fin = ?, lieu = ?, description = ?, frequence = ?, fin_recurrence = ? " +
-        "WHERE id_activite = ?"
+        "UPDATE activite SET titre = ?, debut = ?, fin = ?, lieu = ?, description = ?, frequence = ?, fin_recurrence = ?, " +
+        "journee_entiere = ? WHERE id_activite = ?"
     ).run(titre.trim(), debutUtc, finUtc, lieu ?? null, description ?? null,
-        recurrence.frequence, recurrence.finRecurrence,
+        recurrence.frequence, recurrence.finRecurrence, journeeEntiere === true ? 1 : 0,
         request.params.idActivite);
 
     const row = database.prepare("SELECT * FROM activite WHERE id_activite = ?").get(request.params.idActivite);
