@@ -165,10 +165,12 @@ Toutes les routes `/api/...` demandent d'être connecté : sinon elles réponden
 | `POST` | `/api/agendas` | Crée un agenda (`nom`, `couleur` au format `#RRGGBB`, `description` facultative) |
 | `PUT` | `/api/agendas/:idAgenda` | Modifie un de ses agendas (mêmes champs) |
 | `DELETE` | `/api/agendas/:idAgenda` | Supprime un de ses agendas avec ses activités et ses partages (`403` pour l'agenda par défaut) |
-| `GET` | `/api/agendas/:idAgenda/activites?start=...&end=...` | Liste les activités de l'agenda qui chevauchent la période donnée |
+| `GET` | `/api/agendas/:idAgenda/activites?start=...&end=...` | Liste les activités de l'agenda qui chevauchent la période donnée ; les séries ont un champ `exceptions` (dates des occurrences à ne pas afficher) |
 | `POST` | `/api/agendas/:idAgenda/activites` | Crée une activité (`titre`, `debut`, `fin`, `lieu` et `description` facultatifs). Avec `journeeEntiere: true`, `debut` et `fin` sont des dates sans heure (`YYYY-MM-DD`, fin exclue) |
 | `PUT` | `/api/activites/:idActivite` | Modifie une activité (mêmes champs, sans changer d'agenda) |
 | `DELETE` | `/api/activites/:idActivite` | Supprime une activité |
+| `POST` | `/api/activites/:idActivite/occurrences` | Modifie une seule occurrence d'une série (`date` de l'occurrence + mêmes champs) : elle devient une activité simple |
+| `DELETE` | `/api/activites/:idActivite/occurrences/:date` | Supprime une seule occurrence d'une série (`date` au format `YYYY-MM-DD`) |
 | `GET` | `/api/activites/recherche?q=...&start=...&end=...&idAgenda=...` | Cherche dans les activités accessibles ; tous les paramètres sont facultatifs, `idAgenda` peut être répété pour plusieurs agendas |
 
 ### Partage d'agendas
