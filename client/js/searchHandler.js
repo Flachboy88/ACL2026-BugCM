@@ -1,10 +1,11 @@
 const API_URL = "/api/activites/recherche";
 
 /**
- * Recupère les agendas selectionnées depuis index.ejs
+ * Récupère les IDs des agendas sélectionnés dans le panneau latéral
  */
 function getAgendasSelectionnes(agendaListEl) {
     if (!agendaListEl) return [];
+
     const ids = [];
     agendaListEl.querySelectorAll(".agenda").forEach((div) => {
         const cb = div.querySelector('input[type="checkbox"]');
@@ -25,7 +26,6 @@ async function rechercherActivites({ q, start, end, idAgendas = [] }) {
         params.set("q", q.trim());
     }
     if (start) {
-        // Conversion explicite en ISO UTC comme attendu par toUtc() côté serveur
         params.set("start", new Date(start).toISOString());
     }
     if (end) {
@@ -35,15 +35,12 @@ async function rechercherActivites({ q, start, end, idAgendas = [] }) {
         params.append("idAgenda", String(id));
     }
 
-    // Conversion en string pour le html
     const queryString = params.toString();
     let url = API_URL;
     if (queryString !== "") {
-        // Cree une string du style : "/activites/recherche?q=r%C3%A9union&idAgenda=1"
         url = `${API_URL}?${queryString}`;
     }
-    
-    // Oblige l'envoi de cookies avec la requête (accesToken)
+
     const response = await fetch(url, { credentials: "include" });
 
     if (response.status === 401) {
@@ -54,7 +51,6 @@ async function rechercherActivites({ q, start, end, idAgendas = [] }) {
     const data = await response.json();
 
     if (!response.ok) {
-        // Gère 400 ("Période invalide") et 404 ("Agenda introuvable 1")
         throw new Error(data.erreur || "Erreur lors de la recherche");
     }
 
@@ -62,41 +58,62 @@ async function rechercherActivites({ q, start, end, idAgendas = [] }) {
 }
 
 /**
- * Affiche la liste des activités trouvées dans le menu déroulant
+ * Déplace la vue du calendrier sur la date et l'heure d'une activité
  */
-function afficherResultats(activites, selectEl, wrapperEl) {
-    selectEl.innerHTML = "";
+function naviguerVersActivite(calendar, debutIso) {
+    if (!calendar) return;
+
+    calendar.gotoDate(debutIso);
+
+    const debut = new Date(debutIso);
+    const heures = String(debut.getHours()).padStart(2, "0");
+    const minutes = String(debut.getMinutes()).padStart(2, "0");
+
+    // Exécuté après datesSet() de calendar.js pour ne pas être écrasé par l'heure actuelle
+    setTimeout(() => {
+        calendar.scrollToTime(`${heures}:${minutes}:00`);
+    }, 0);
+}
+
+/**
+ * Affiche la liste des activités trouvées et branche la navigation au clic
+ */
+function afficherResultats(activites, listEl, wrapperEl, calendar) {
+    listEl.innerHTML = "";
 
     if (activites.length === 0) {
-        const vide = document.createElement("option");
-        vide.value = "";
+        const vide = document.createElement("li");
         vide.textContent = "Aucune activité trouvée";
-        selectEl.appendChild(vide);
+        listEl.appendChild(vide);
         wrapperEl.hidden = false;
         return;
     }
 
-    // Option par défaut pour que la sélection du 1er résultat déclenche bien "change"
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-
-    // Si une seule activité affiche directement sinon placeholder
-    if (activites.length != 1 ){
-        placeholder.textContent = `${activites.length} activité(s) trouvée(s) — choisir...`;
-        selectEl.appendChild(placeholder);
-    }
-
     for (const act of activites) {
-        const item = document.createElement("option");
+        const item = document.createElement("li");
         const debutDate = new Date(act.debut);
         const dateFormatee = debutDate.toLocaleString("fr-FR", {
             dateStyle: "short",
             timeStyle: "short"
         });
 
-        item.value = act.debut;
-        item.textContent = `${act.titre} — ${dateFormatee}${act.lieu ? ` (${act.lieu})` : ""}`;
-        selectEl.appendChild(item);
+        const titre = document.createElement("strong");
+        titre.textContent = act.titre;
+
+        let texteDetails = ` — ${dateFormatee}`;
+        if (act.lieu) {
+            texteDetails += ` (${act.lieu})`;
+        }
+
+        item.append(titre, document.createTextNode(texteDetails));
+        item.style.cursor = "pointer";
+
+        item.addEventListener("click", () => {
+            naviguerVersActivite(calendar, act.debut);
+            wrapperEl.hidden = true;
+        });
+
+        listEl.appendChild(item);
     }
 
     wrapperEl.hidden = false;
@@ -109,21 +126,12 @@ export function initSearch(calendar = null, agendaListId = "agenda_list") {
     const searchInput = document.getElementById("Recherche");
     const startInput = document.getElementById("search_start");
     const endInput = document.getElementById("search_end");
-    const resultsSelect = document.getElementById("search_results");
+    const resultsList = document.getElementById("search_results");
     const resultsWrapper = document.getElementById("search_results_wrapper");
     const errorContainer = document.getElementById("search_erreur");
     const agendaListEl = document.getElementById(agendaListId);
 
-    if (!searchInput || !resultsSelect || !resultsWrapper) return;
-
-    // Navigation vers la date choisie dans le dropdown
-    resultsSelect.addEventListener("change", () => {
-        if (!resultsSelect.value) return;
-        if (calendar) {
-            calendar.gotoDate(resultsSelect.value);
-        }
-        resultsWrapper.hidden = true;
-    });
+    if (!searchInput || !resultsList || !resultsWrapper) return;
 
     const lancerRecherche = async () => {
         const q = searchInput.value;
@@ -134,7 +142,7 @@ export function initSearch(calendar = null, agendaListId = "agenda_list") {
 
         if (!q.trim() && !start && !end) {
             resultsWrapper.hidden = true;
-            resultsSelect.innerHTML = "";
+            resultsList.innerHTML = "";
             return;
         }
 
@@ -142,7 +150,7 @@ export function initSearch(calendar = null, agendaListId = "agenda_list") {
         const idAgendas = getAgendasSelectionnes(agendaListEl);
 
         if (totalAgendas > 0 && idAgendas.length === 0) {
-            afficherResultats([], resultsSelect, resultsWrapper);
+            afficherResultats([], resultsList, resultsWrapper, calendar);
             return;
         }
 
@@ -155,7 +163,7 @@ export function initSearch(calendar = null, agendaListId = "agenda_list") {
             });
 
             if (activites !== null) {
-                afficherResultats(activites, resultsSelect, resultsWrapper);
+                afficherResultats(activites, resultsList, resultsWrapper, calendar);
             }
         } catch (err) {
             resultsWrapper.hidden = true;
