@@ -37,5 +37,6 @@ app.use(pagesRouter);
 // Assets statiques : seulement css et js (pas views/, sinon les .ejs seraient exposés)
 app.use("/css", express.static(path.join(CLIENT_FOLDER, "css")));
 app.use("/js", express.static(path.join(CLIENT_FOLDER, "js")));
+app.use("/favicon.ico", express.static("client/favicon.ico")); // Empeche le favicon autrement. 
 
 export default app;
